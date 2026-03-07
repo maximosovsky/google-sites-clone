@@ -76,20 +76,22 @@ Options:
 ## 💡 How It Works
 
 ```
-URL → [1. Crawl]     → page-map.json (all pages + structure)
-    → [2. SingleFile] → CSS + base64 images (visual fidelity)
-    → [3. Puppeteer]  → Clean content + iframe sources
-    → [4. Images]     → base64 → local files (permanence)
-    → [5. Build]      → Merge all → static HTML clone
+URL → [1. Crawl]      → page-map.json (all pages + structure)
+    → [2. SingleFile]  → _pages/ CSS + base64 images (visual fidelity)
+    → [3. Puppeteer]   → _content/ Clean content + iframe sources
+    → [4. Images]      → site/images/ base64 → local files
+    → [4b. Video]      → site/thumbnails/ YouTube/Vimeo thumbs
+    → [5. Build]       → site/ iframe nav + pages + report
 ```
 
 | Pass | Tool | Captures |
 |------|------|----------|
-| 1 | Puppeteer | Navigation structure |
-| 2 | SingleFile CLI | CSS, base64 images, layout |
-| 3 | Puppeteer (batch ×5) | Clean text, links, iframe srcs |
-| 4 | Base64 decoder | Images from SingleFile → files |
-| 5 | Build script | Merge + YouTube + SEO |
+| 1 | Puppeteer | Navigation structure → `page-map.json` |
+| 2 | SingleFile CLI | CSS, base64 images, layout → `_pages/` |
+| 3 | Puppeteer (batch ×5) | Clean text, links, iframe srcs → `_content/` |
+| 4 | Base64 decoder | Images from SingleFile → `site/images/` |
+| 4b | Video scanner | YouTube/Vimeo thumbnails → `site/thumbnails/` |
+| 5 | Build script | iframe nav + report + sitemap → `site/` |
 
 ---
 
@@ -112,7 +114,10 @@ google-sites-clone/
 │   ├── singlefile.js       # SingleFile pass
 │   ├── puppeteer.js        # Puppeteer batch extraction
 │   ├── images.js           # Base64 → local images
-│   └── build.js            # Merge + sitemap
+│   ├── video.js            # YouTube/Vimeo thumbnail download
+│   ├── build.js            # iframe nav + page assembly
+│   └── report.js           # Clone report dashboard
+├── rebuild.js              # Quick rebuild from cache
 ├── site/
 │   ├── index.html          # Landing page (gsclone.osovsky.com)
 │   └── style.css           # Design system
@@ -132,7 +137,10 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 - [x] CLI interface
 - [x] Auto-crawl navigation
 - [x] Image localization
+- [x] iframe-based navigation (sidebar + content)
+- [x] Clone report dashboard
 - [x] Landing page (gsclone.osovsky.com)
+- [ ] YouTube/Vimeo thumbnail download
 - [ ] GitHub Pages deploy
 - [ ] npm publish
 
