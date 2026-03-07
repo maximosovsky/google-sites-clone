@@ -1,0 +1,26 @@
+{
+    "name": "google-sites-clone",
+    "version": "0.1.0",
+    "description": "Clone any Google Sites page to static HTML. Two-pass pipeline: SingleFile + Puppeteer.",
+    "main": "lib/index.js",
+    "bin": {
+        "gsclone": "bin/gsclone.js"
+    },
+    "scripts": {
+        "start": "node bin/gsclone.js",
+        "dev": "node bin/gsclone.js"
+    },
+    "keywords": [
+        "google-sites",
+        "clone",
+        "static-html",
+        "puppeteer",
+        "singlefile"
+    ],
+    "author": "Maxim Osovsky",
+    "license": "MIT",
+    "dependencies": {
+        "puppeteer": "^22.0.0",
+        "commander": "^12.0.0"
+    }
+}

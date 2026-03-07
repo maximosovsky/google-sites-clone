@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>google-sites-clone — Clone any Google Sites page to static HTML</title>
+
+  <!-- SEO -->
+  <meta name="description"
+    content="Paste a Google Sites URL, get a complete static HTML clone. Free, open-source, two-pass pipeline.">
+  <meta name="author" content="Maxim Osovsky">
+  <link rel="canonical" href="https://gsclone.osovsky.com/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="google-sites-clone">
+  <meta property="og:description" content="Clone any Google Sites page to static HTML with one click">
+  <meta property="og:url" content="https://gsclone.osovsky.com/">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="google-sites-clone">
+  <meta name="twitter:description" content="Clone any Google Sites page to static HTML with one click">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Sora:wght@700&display=swap"
+    rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <a href="/" class="header-logo">
+      <span>Google Sites Clone</span>
+    </a>
+    <div class="header-actions">
+      <a class="btn" href="https://github.com/maximosovsky/google-sites-clone" target="_blank"
+        rel="noopener noreferrer">GitHub <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="7" y1="17" x2="17" y2="7" />
+          <polyline points="7 7 17 7 17 17" />
+        </svg></a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <svg id="theme-icon-moon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+        <svg id="theme-icon-sun" width="20" height="20" fill="none" stroke="#facc15" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="display:none">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="m4.93 4.93 1.41 1.41" />
+          <path d="m17.66 17.66 1.41 1.41" />
+          <path d="M2 12h2" />
+          <path d="M20 12h2" />
+          <path d="m6.34 17.66-1.41 1.41" />
+          <path d="m19.07 4.93-1.41 1.41" />
+        </svg>
+      </button>
+      <span class="avatar-wrap" id="avatarWrap" onclick="handleAvatarClick(event)">
+        <svg class="google-icon" id="googleIcon" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="22" fill="#f2f2f2" stroke="#dadce0" stroke-width="1.5" />
+          <path
+            d="M24 12.5c2.97 0 5.46 1.07 7.45 2.82l5.58-5.58C33.52 6.48 29.13 4.5 24 4.5 16.32 4.5 9.82 9.25 6.95 15.88l6.5 5.05C15.03 15.97 19.12 12.5 24 12.5z"
+            fill="#EA4335" />
+          <path
+            d="M43.12 24.55c0-1.57-.14-3.09-.4-4.55H24v8.6h10.72c-.46 2.5-1.87 4.6-3.99 6.02l6.13 4.76c3.57-3.3 5.63-8.15 5.63-13.93l.63-.9z"
+            fill="#4285F4" />
+          <path
+            d="M13.45 28.07a11.5 11.5 0 0 1 0-8.14l-6.5-5.05A19.5 19.5 0 0 0 4.5 24c0 3.15.76 6.13 2.1 8.77l6.85-4.7z"
+            fill="#FBBC05" />
+          <path
+            d="M24 43.5c5.13 0 9.44-1.7 12.59-4.63l-6.13-4.76c-1.7 1.14-3.87 1.82-6.46 1.82-4.88 0-8.97-3.47-10.55-8.43l-6.5 5.05C10.18 38.75 16.68 43.5 24 43.5z"
+            fill="#34A853" />
+        </svg>
+        <img id="userAvatar" src="" alt="" referrerpolicy="no-referrer">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <div class="dropdown-name" id="dropdownName"></div>
+          <div class="dropdown-email" id="dropdownEmail"></div>
+          <button class="dropdown-logout" onclick="handleLogout(event)">Sign Out</button>
+        </div>
+      </span>
+      <span class="avatar-wrap" id="ghAvatarWrap" onclick="handleGhAvatarClick(event)">
+        <svg class="github-icon" id="githubIcon" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="22" fill="#f2f2f2" stroke="#dadce0" stroke-width="1.5" />
+          <path
+            d="M24 10c-7.73 0-14 6.27-14 14 0 6.19 4.01 11.44 9.58 13.29.7.13.96-.3.96-.67 0-.33-.01-1.42-.02-2.57-3.9.85-4.72-1.65-4.72-1.65-.64-1.62-1.56-2.05-1.56-2.05-1.27-.87.1-.85.1-.85 1.4.1 2.14 1.44 2.14 1.44 1.25 2.14 3.28 1.52 4.08 1.16.13-.91.49-1.52.89-1.87-3.11-.35-6.38-1.56-6.38-6.93 0-1.53.55-2.78 1.44-3.76-.14-.36-.63-1.78.14-3.71 0 0 1.17-.38 3.85 1.44a13.4 13.4 0 0 1 7 0c2.67-1.82 3.84-1.44 3.84-1.44.77 1.93.28 3.35.14 3.71.9.98 1.44 2.23 1.44 3.76 0 5.38-3.28 6.57-6.4 6.92.5.43.95 1.29.95 2.6 0 1.88-.02 3.39-.02 3.85 0 .38.25.81.96.67C33.99 35.44 38 30.19 38 24c0-7.73-6.27-14-14-14z"
+            fill="#333" />
+        </svg>
+        <img id="ghUserAvatar" src="" alt="" referrerpolicy="no-referrer">
+        <div class="avatar-dropdown" id="ghAvatarDropdown">
+          <div class="dropdown-name" id="ghDropdownName"></div>
+          <div class="dropdown-email" id="ghDropdownEmail"></div>
+          <button class="dropdown-logout" onclick="handleGhLogout(event)">Sign Out</button>
+        </div>
+      </span>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-text">
+          <a class="hero-badge" href="https://github.com/maximosovsky/google-sites-clone/blob/main/LICENSE"
+            target="_blank" rel="noopener noreferrer">
+            <svg width="16" height="16" fill="none" stroke="#2a9d5c" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Open Source · MIT License
+          </a>
+          <h1 class="hero-title">Clone any Google Sites page to static HTML</h1>
+          <p class="hero-subtitle">No more vendor lock-in. Your content belongs to you. Paste a URL, get a
+            complete static clone with hosting on GitHub Pages.</p>
+          <div class="hero-ctas">
+            <a class="btn primary" href="#clone"
+              style="padding:12px 24px;font-size:15px;font-weight:700;border-radius:10px">Clone a
+              site</a>
+            <a class="btn" href="https://github.com/maximosovsky/google-sites-clone" target="_blank"
+              rel="noopener noreferrer"
+              style="padding:12px 24px;font-size:15px;font-weight:700;border-radius:10px">GitHub
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7" />
+                <polyline points="7 7 17 7 17 17" />
+              </svg></a>
+          </div>
+
+          <!-- Clone form (inside hero) -->
+          <div class="clone-form" id="clone">
+            <div class="input-group">
+              <input type="url" id="urlInput" placeholder="https://sites.google.com/view/your-site" autocomplete="url"
+                spellcheck="false">
+              <button class="btn primary clone-btn" id="cloneBtn"
+                style="padding:12px 24px;border-radius:10px;font-weight:700">
+                <span class="btn-text">Clone</span>
+                <span class="btn-loading" hidden>Cloning...</span>
+              </button>
+            </div>
+            <div class="clone-options">
+              <label><input type="checkbox" checked> Download images</label>
+              <label><input type="checkbox" checked> YouTube thumbnails</label>
+              <label><input type="checkbox"> Custom navigation</label>
+              <label><input type="checkbox"> Full inline (base64)</label>
+            </div>
+          </div>
+        </div>
+        <div class="hero-image">
+          <div class="pipeline-visual">
+            <div class="pipe-box pipe-sf">
+              <div class="pipe-label">SingleFile</div>
+              <div class="pipe-tags">CSS · Images · Layout</div>
+            </div>
+            <div class="pipe-connector">+</div>
+            <div class="pipe-box pipe-pp">
+              <div class="pipe-label">Puppeteer</div>
+              <div class="pipe-tags">Text · Links · YouTube</div>
+            </div>
+            <div class="pipe-connector">=</div>
+            <div class="pipe-box pipe-result">
+              <div class="pipe-label">100% Clone</div>
+              <div class="pipe-tags">Complete static HTML</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <div>
+            <h3 class="feature-title">Auto-crawl</h3>
+            <p class="feature-desc">Discovers all pages from sidebar navigation automatically. No manual
+              URL listing needed.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <div>
+            <h3 class="feature-title">Two-pass pipeline</h3>
+            <p class="feature-desc">SingleFile captures CSS and images. Puppeteer extracts clean content.
+              Merged for 100% fidelity.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🖼️</div>
+          <div>
+            <h3 class="feature-title">Image localization</h3>
+            <p class="feature-desc">Downloads all images as local files. No Google CDN dependency — works
+              forever.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON TABLE -->
+  <section class="compare-section">
+    <div class="container">
+      <h2 class="section-title">Why two passes?</h2>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Tool</th>
+            <th>Text</th>
+            <th>Links</th>
+            <th>Images</th>
+            <th>YouTube</th>
+            <th>CSS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Puppeteer</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>URL only</td>
+            <td>✅</td>
+            <td>❌</td>
+          </tr>
+          <tr>
+            <td>SingleFile</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅ base64</td>
+            <td>❌</td>
+            <td>✅</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>Combined</strong></td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <span>2025-2026 | <a href="https://www.linkedin.com/in/osovsky/" target="_blank" rel="noopener noreferrer">Maxim
+            Osovsky</a>. Licensed under <a href="https://github.com/maximosovsky/google-sites-clone/blob/main/LICENSE"
+            target="_blank" rel="noopener noreferrer">MIT</a>.</span>
+        <ul class="footer-social">
+          <li><a href="https://github.com/maximosovsky/google-sites-clone" target="_blank" rel="noopener"
+              class="social-github"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path
+                  d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+                  fill="currentColor" />
+              </svg></a></li>
+          <li><a href="https://www.linkedin.com/in/osovsky/" target="_blank" rel="noopener" class="social-linkedin"><svg
+                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 448 512">
+                <path
+                  d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"
+                  fill="currentColor" />
+              </svg></a></li>
+          <li><a href="https://x.com/maximosovsky" target="_blank" rel="noopener" class="social-x"><svg
+                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
+                <path
+                  d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"
+                  fill="currentColor" />
+              </svg></a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Dark mode toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      document.getElementById('theme-icon-moon').style.display = next === 'dark' ? 'none' : '';
+      document.getElementById('theme-icon-sun').style.display = next === 'dark' ? '' : 'none';
+    }
+
+    // Restore saved theme
+    (function () {
+      const saved = localStorage.getItem('theme');
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+        if (saved === 'dark') {
+          document.getElementById('theme-icon-moon').style.display = 'none';
+          document.getElementById('theme-icon-sun').style.display = '';
+        }
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-icon-moon').style.display = 'none';
+        document.getElementById('theme-icon-sun').style.display = '';
+      }
+    })();
+
+    // Clone button
+    document.getElementById('cloneBtn').addEventListener('click', function () {
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) { document.getElementById('urlInput').focus(); return; }
+      if (!url.includes('sites.google.com')) {
+        alert('Please enter a valid Google Sites URL');
+        return;
+      }
+      this.querySelector('.btn-text').hidden = true;
+      this.querySelector('.btn-loading').hidden = false;
+      this.disabled = true;
+      setTimeout(() => {
+        alert('🔄 Clone request submitted!\n\nYou will receive an email when ready (~20 min).\n\n(Backend coming soon)');
+        this.querySelector('.btn-text').hidden = false;
+        this.querySelector('.btn-loading').hidden = true;
+        this.disabled = false;
+      }, 2000);
+    });
+
+    // Enter triggers clone
+    document.getElementById('urlInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') document.getElementById('cloneBtn').click();
+    });
+
+    // URL validation color
+    document.getElementById('urlInput').addEventListener('input', function () {
+      this.style.borderColor = this.value.includes('sites.google.com') ? '#2a9d5c' :
+        this.value.length > 10 ? '#c00' : '';
+    });
+
+    // === GOOGLE AUTH STUB ===
+    let _isAuthorized = false;
+
+    function handleAvatarClick(e) {
+      e.stopPropagation();
+      if (_isAuthorized) {
+        document.getElementById('avatarDropdown').classList.toggle('open');
+      } else {
+        // Stub: simulate Google login
+        const stubUser = {
+          name: 'Maxim Osovsky',
+          email: 'osovsky@gmail.com',
+          picture: 'https://lh3.googleusercontent.com/a/default-user=s96-c'
+        };
+        localStorage.setItem('gsclone_user', JSON.stringify(stubUser));
+        applyAuth(stubUser);
+      }
+    }
+
+    function handleLogout(e) {
+      e.stopPropagation();
+      localStorage.removeItem('gsclone_user');
+      _isAuthorized = false;
+      document.getElementById('userAvatar').src = '';
+      document.getElementById('userAvatar').classList.remove('visible');
+      document.getElementById('googleIcon').classList.remove('hidden');
+      document.getElementById('avatarWrap').dataset.tooltip = 'Sign in with Google';
+      document.getElementById('avatarDropdown').classList.remove('open');
+    }
+
+    function applyAuth(user) {
+      _isAuthorized = true;
+      const img = document.getElementById('userAvatar');
+      img.src = user.picture;
+      img.alt = user.name || user.email || '';
+      img.classList.add('visible');
+      document.getElementById('googleIcon').classList.add('hidden');
+      document.getElementById('avatarWrap').removeAttribute('data-tooltip');
+      document.getElementById('dropdownName').textContent = user.name || '';
+      document.getElementById('dropdownEmail').textContent = user.email || '';
+    }
+
+    // === GITHUB AUTH STUB ===
+    let _ghAuthorized = false;
+
+    function handleGhAvatarClick(e) {
+      e.stopPropagation();
+      if (_ghAuthorized) {
+        document.getElementById('ghAvatarDropdown').classList.toggle('open');
+      } else {
+        const stubUser = {
+          name: 'maximosovsky',
+          email: 'osovsky@gmail.com',
+          picture: 'https://avatars.githubusercontent.com/u/maximosovsky?s=96'
+        };
+        localStorage.setItem('gsclone_gh_user', JSON.stringify(stubUser));
+        applyGhAuth(stubUser);
+      }
+    }
+
+    function handleGhLogout(e) {
+      e.stopPropagation();
+      localStorage.removeItem('gsclone_gh_user');
+      _ghAuthorized = false;
+      document.getElementById('ghUserAvatar').src = '';
+      document.getElementById('ghUserAvatar').classList.remove('visible');
+      document.getElementById('githubIcon').classList.remove('hidden');
+      document.getElementById('ghAvatarWrap').dataset.tooltip = 'Sign in with GitHub';
+      document.getElementById('ghAvatarDropdown').classList.remove('open');
+    }
+
+    function applyGhAuth(user) {
+      _ghAuthorized = true;
+      const img = document.getElementById('ghUserAvatar');
+      img.src = user.picture;
+      img.alt = user.name || user.email || '';
+      img.classList.add('visible');
+      document.getElementById('githubIcon').classList.add('hidden');
+      document.getElementById('ghAvatarWrap').removeAttribute('data-tooltip');
+      document.getElementById('ghDropdownName').textContent = user.name || '';
+      document.getElementById('ghDropdownEmail').textContent = user.email || '';
+    }
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', function () {
+      document.getElementById('avatarDropdown').classList.remove('open');
+      document.getElementById('ghAvatarDropdown').classList.remove('open');
+    });
+
+    // Restore auth from localStorage
+    (function () {
+      const saved = localStorage.getItem('gsclone_user');
+      if (saved) {
+        try { applyAuth(JSON.parse(saved)); }
+        catch (e) { localStorage.removeItem('gsclone_user'); }
+      } else {
+        document.getElementById('avatarWrap').dataset.tooltip = 'Sign in with Google';
+      }
+
+      const ghSaved = localStorage.getItem('gsclone_gh_user');
+      if (ghSaved) {
+        try { applyGhAuth(JSON.parse(ghSaved)); }
+        catch (e) { localStorage.removeItem('gsclone_gh_user'); }
+      } else {
+        document.getElementById('ghAvatarWrap').dataset.tooltip = 'Sign in with GitHub';
+      }
+    })();
+  </script>
+
+</body>
+
+</html>

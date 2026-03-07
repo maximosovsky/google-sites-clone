@@ -1,0 +1,23 @@
+# google-sites-clone
+
+> Clone any Google Sites page to static HTML. Two-pass pipeline: SingleFile for CSS/images + Puppeteer for clean content.
+
+## Docs
+
+- [README](https://github.com/maximosovsky/google-sites-clone/blob/main/README.md): Quick start, features, tech stack
+- [ROADMAP](https://github.com/maximosovsky/google-sites-clone/blob/main/ROADMAP.md): Development phases and decisions
+- [ARCHITECTURE](https://github.com/maximosovsky/google-sites-clone/blob/main/ARCHITECTURE.md): Mermaid diagrams and system design
+
+## Usage
+
+```bash
+npx google-sites-clone https://sites.google.com/view/your-site
+```
+
+## Pipeline
+
+1. Crawl: Auto-discover pages from navigation
+2. SingleFile: Capture CSS + base64 images
+3. Puppeteer: Extract clean content (batch x5)
+4. Images: Decode base64 → local files
+5. Build: Merge + YouTube thumbnails + sitemap.xml
