@@ -1,0 +1,52 @@
+name: Clone Site
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Google Sites URL to clone
+        required: true
+        type: string
+      email:
+        description: Email for notification (optional)
+        required: false
+        type: string
+
+jobs:
+  clone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install SingleFile CLI
+        run: npm install -g single-file-cli
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Run pipeline
+        run: |
+          node bin/gsclone.js "${{ github.event.inputs.url }}" -o ./clone-output
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+
+      - name: Create ZIP
+        run: |
+          cd clone-output/site
+          zip -r ../../clone-result.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: clone-result
+          path: clone-result.zip
+          retention-days: 7

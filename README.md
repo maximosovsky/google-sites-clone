@@ -138,6 +138,19 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 
 ---
 
+## 🔀 Alternatives
+
+| Tool | Approach | Google Sites (new) |
+|------|----------|--------------------|
+| [HTTrack](https://github.com/xroche/httrack) | Recursive wget-style crawl | ❌ Can't execute JavaScript — downloads empty SPA shell |
+| [google-sites-backup](https://github.com/famzah/google-sites-backup) | Google Sites API (GData) | ❌ Classic Sites only, API deprecated |
+| [generate-static-site](https://github.com/lichtquelle/generate-static-site) | Headless SSR pre-render | ⚠️ Generic tool, no auto-crawl or Google Sites awareness |
+| **google-sites-clone** | Puppeteer + SingleFile | ✅ Full SPA rendering, auto-crawl, CSS fidelity, image localization |
+
+> New Google Sites (2020+) is a single-page application — all content is rendered by JavaScript. Traditional crawlers see an empty page. That's why this project uses a headless browser.
+
+---
+
 ## 🤝 Contributing
 
 Fork → `feature/name` → PR

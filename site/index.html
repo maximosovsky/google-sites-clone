@@ -4,7 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>google-sites-clone — Clone any Google Sites page to static HTML</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Clone any Google Sites page to static HTML</title>
 
   <!-- SEO -->
   <meta name="description"
@@ -312,7 +313,7 @@
     })();
 
     // Clone button
-    document.getElementById('cloneBtn').addEventListener('click', function () {
+    document.getElementById('cloneBtn').addEventListener('click', async function () {
       const url = document.getElementById('urlInput').value.trim();
       if (!url) { document.getElementById('urlInput').focus(); return; }
       if (!url.includes('sites.google.com')) {
@@ -322,12 +323,24 @@
       this.querySelector('.btn-text').hidden = true;
       this.querySelector('.btn-loading').hidden = false;
       this.disabled = true;
-      setTimeout(() => {
-        alert('🔄 Clone request submitted!\n\nYou will receive an email when ready (~20 min).\n\n(Backend coming soon)');
-        this.querySelector('.btn-text').hidden = false;
-        this.querySelector('.btn-loading').hidden = true;
-        this.disabled = false;
-      }, 2000);
+      try {
+        const res = await fetch('/api/clone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert('✅ Clone started!\n\nThe pipeline is running on GitHub Actions.\nCheck the Actions tab for progress and download the ZIP when ready.\n\nhttps://github.com/maximosovsky/google-sites-clone/actions');
+        } else {
+          alert('❌ Error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('❌ Network error: ' + e.message);
+      }
+      this.querySelector('.btn-text').hidden = false;
+      this.querySelector('.btn-loading').hidden = true;
+      this.disabled = false;
     });
 
     // Enter triggers clone
