@@ -1,3 +1,4 @@
+# Dependencies
 node_modules/
 .env
 .env.*
@@ -18,3 +19,4 @@ clone/
 _pages/
 _content/
 page-map.json
+test-clone/
