@@ -1,20 +1,24 @@
 <div align="center">
 
-# Google Sites Clone
+# 🌐 Google Sites Clone
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Puppeteer](https://img.shields.io/badge/Puppeteer-22-40B5A4?style=for-the-badge&logo=puppeteer&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-![Google Sites](https://img.shields.io/badge/Google_Sites-Clone-4285F4?style=for-the-badge&logo=google)
 
-**Clone any Google Sites page to static HTML with hosting on GitHub Pages**
+**Clone any Google Sites page to static HTML — own your content forever**
 
-[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Roadmap](ROADMAP.md)
+[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Tech Stack](#-tech-stack) · [Roadmap](ROADMAP.md)
 
 </div>
 
+> *No more vendor lock-in. Your Google Sites content belongs to you. Paste a URL, get a complete static clone with all images, styles, and navigation — ready for self-hosting.*
+
 ---
 
-> *No more vendor lock-in. Your Google Sites content belongs to you.*
+## 💡 Concept
+
+Google Sites stores your content behind an SPA that search engines can't index and you can't export. **google-sites-clone** uses a two-pass pipeline (SingleFile + Puppeteer) to capture everything — CSS fidelity from SingleFile and clean semantic content from Puppeteer — then merges both into standalone HTML files with localized images and SEO metadata.
 
 ---
 
@@ -51,7 +55,7 @@ node bin/gsclone.js https://sites.google.com/view/your-site
 </details>
 
 <details>
-<summary>⚙️ Options</summary>
+<summary>⚙️ CLI Options</summary>
 
 ```bash
 gsclone <url> [options]
@@ -91,17 +95,17 @@ URL → [1. Crawl]     → page-map.json (all pages + structure)
 
 ## 🏗️ Tech Stack
 
-| Technology | Purpose |
-|-----------|---------|
-| Node.js | Runtime |
-| Puppeteer | Content extraction + crawling |
-| SingleFile CLI | CSS + image preservation |
-| Commander.js | CLI interface |
+| Layer | Technology |
+|-------|------------|
+| Runtime | Node.js 18+ |
+| Content extraction | Puppeteer |
+| CSS preservation | SingleFile CLI |
+| CLI interface | Commander.js |
 
 ```
 google-sites-clone/
 ├── bin/
-│   └── gsclone.js         # CLI entry point
+│   └── gsclone.js          # CLI entry point
 ├── lib/
 │   ├── index.js            # Pipeline orchestrator
 │   ├── crawl.js            # Auto-crawl navigation
@@ -112,7 +116,6 @@ google-sites-clone/
 ├── site/
 │   ├── index.html          # Landing page (gsclone.osovsky.com)
 │   └── style.css           # Design system
-├── architecture.html       # Mermaid diagrams (rendered)
 ├── ARCHITECTURE.md
 ├── ROADMAP.md
 ├── llms.txt

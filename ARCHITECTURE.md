@@ -1,6 +1,8 @@
-# google-sites-clone — Architecture
+# 🏗️ google-sites-clone — Architecture
 
-## CLI Pipeline
+---
+
+## ⚙️ CLI Pipeline
 
 ```mermaid
 flowchart LR
@@ -31,8 +33,7 @@ flowchart LR
 
 ---
 
-## Product Architecture
-
+## 🌐 Product Architecture
 
 ```mermaid
 flowchart TB
@@ -101,6 +102,10 @@ flowchart TB
     R -->|"ZIP + report link"| USER
     S -->|"username.github.io/clone"| USER
 ```
+
+---
+
+## 🔄 Sequence Diagram
 
 ```mermaid
 sequenceDiagram
