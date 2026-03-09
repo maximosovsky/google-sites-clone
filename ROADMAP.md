@@ -74,3 +74,13 @@
 - [x] Real GitHub OAuth
 - [x] Email delivery (Resend)
 - [x] Cloudflare R2 storage (ZIP 7d, report 360d)
+
+---
+
+## 🔜 Phase 6: Polish
+
+- [ ] Fix email input field visibility on landing page
+- [ ] Verify `osovsky.com` domain in Resend (DNS propagation pending)
+- [ ] Update `RESEND_FROM` to `clone@osovsky.com`
+- [ ] GitHub Pages auto-deploy from web UI (using stored OAuth token)
+- [ ] Custom domain `gsclone.osovsky.com` → Vercel

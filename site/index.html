@@ -368,6 +368,7 @@
           document.getElementById('statusTitle').textContent = data.siteTitle || 'Clone started!';
           document.getElementById('statusSite').textContent = url;
           document.getElementById('statusMsg').textContent = email ? '📧 Check your email — confirmation sent. We\'ll email download links when ready.' : '⏱ Usually takes 3–10 minutes.';
+          if (data.emailError) document.getElementById('statusMsg').textContent = '⚠️ Email error: ' + data.emailError;
           const img = document.getElementById('statusPreview');
           if (data.ogImage) { img.src = data.ogImage; img.style.display = 'block'; }
           else { img.style.display = 'none'; }

@@ -95,13 +95,16 @@ export default async function handler(req, res) {
                             </div>
                         `,
                     });
-                } catch { /* email failure shouldn't block clone */ }
+                } catch (emailErr) { /* store error for debug */
+                    var emailError = emailErr.message;
+                }
             }
 
             return res.status(200).json({
                 ok: true,
                 siteTitle,
                 ogImage,
+                emailError: emailError || null,
                 message: `✅ Clone started!\n\n${siteTitle}`,
             });
         }
