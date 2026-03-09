@@ -170,12 +170,16 @@ flowchart TB
         A["Paste Google Sites URL"]
     end
 
+    subgraph AUTH["🔐 OAuth"]
+        GA["Google OAuth 2.0"]
+        GHA["GitHub OAuth"]
+        SESS["HMAC Session Cookie"]
+    end
+
     subgraph FRONTEND["🌐 Vercel — gsclone.osovsky.com"]
         B["Landing Page"]
         C{"Auth?"}
         D["Preview Only"]
-        E["Google OAuth"]
-        F["GitHub OAuth"]
         Q["Queue Status"]
     end
 
@@ -187,7 +191,7 @@ flowchart TB
             I["CSS + base64 images"]
         end
 
-        subgraph PASS2["Pass 2: Puppeteer batch ×5"]
+        subgraph PASS2["Pass 2: Puppeteer batch x5"]
             J["Clean content + iframe srcs"]
             J2["SPA navigation fallback"]
         end
@@ -195,12 +199,13 @@ flowchart TB
         K["Merge"]
         L["YouTube Thumbnails"]
         M["sitemap.xml + robots.txt"]
-        N["ZIP"]
+        N["ZIP + Report"]
+        WH["POST /api/upload"]
     end
 
     subgraph STORAGE["☁️ Cloudflare R2"]
         O["ZIP (7 days)"]
-        P["Report /r/id (360 days)"]
+        P["Report (360 days)"]
     end
 
     subgraph DELIVERY["📬 Delivery"]
@@ -208,18 +213,13 @@ flowchart TB
         S["GitHub Pages"]
     end
 
-    subgraph AUTH["🔐 OAuth"]
-        GA["Google OAuth 2.0"]
-        GHA["GitHub OAuth"]
-        SESS["HMAC Session Cookie"]
-    end
-
     A --> B
     B --> C
     C -->|None| D
-    C -->|Google| E --> Q --> G
-    C -->|GitHub| F
+    C -->|Google| GA --> SESS --> Q
+    C -->|GitHub| GHA --> SESS
 
+    Q --> G
     G --> H
     H --> I
     H --> J
@@ -230,10 +230,39 @@ flowchart TB
     K --> L --> N
     K --> M
 
-    N --> O --> P
-    N --> R
+    N --> WH
+    WH --> O
+    WH --> P
+    WH --> R
 
-    F -->|checkbox| S
     R -->|"ZIP + report link"| USER
     S -->|"username.github.io/clone"| USER
 ```
+
+### Auth Flow
+
+1. User clicks Google/GitHub icon → redirects to `/api/auth-google` or `/api/auth-github`
+2. OAuth provider redirects back to callback URL with authorization code
+3. Callback exchanges code for access token, fetches user profile
+4. HMAC-signed session cookie set (`HttpOnly`, `Secure`, `SameSite=Lax`, 30 days)
+5. Frontend calls `/api/auth-me` on page load → restores avatar and pre-fills email
+
+### Storage + Email Flow
+
+1. GitHub Actions completes clone → POSTs ZIP (base64) + report HTML to `/api/upload`
+2. Upload handler stores ZIP in R2 (`zips/{id}.zip`, TTL 7d) and report (`reports/{id}.html`, TTL 360d)
+3. Sends email via Resend with presigned download links
+4. `/api/download?id=xxx&type=zip` redirects to presigned R2 URL
+
+### Environment Variables
+
+| Variable | Service |
+|----------|---------|
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud Console |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub Developer Settings |
+| `JWT_SECRET` | Random 32+ char string |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Cloudflare R2 |
+| `R2_BUCKET` | Bucket name (e.g. `gsclone`) |
+| `RESEND_API_KEY`, `RESEND_FROM` | Resend |
+| `WEBHOOK_SECRET` | Shared secret for Actions → upload |
+| `GITHUB_TOKEN` | GitHub PAT for workflow dispatch |

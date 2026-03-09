@@ -120,6 +120,10 @@ URL → [1. Crawl]      → page-map.json (all pages + structure)
 | Content extraction | Puppeteer |
 | CSS preservation | SingleFile CLI |
 | CLI interface | Commander.js |
+| Auth | Google OAuth 2.0, GitHub OAuth |
+| Storage | Cloudflare R2 (S3-compatible) |
+| Email | Resend |
+| Hosting | Vercel (landing + API) |
 
 ```
 google-sites-clone/
@@ -137,8 +141,21 @@ google-sites-clone/
 │   ├── deploy.js           # GitHub Pages deploy
 │   └── zip.js              # ZIP archive creation
 ├── rebuild.js              # Quick rebuild from cache
-├── site/
-│   └── index.html          # Landing page
+├── site/                   # Landing page (Vercel)
+│   ├── index.html          # Landing page + auth UI
+│   ├── style.css           # Design system
+│   ├── vercel.json         # API rewrites
+│   └── api/
+│       ├── _session.js     # HMAC session helper
+│       ├── _r2.js          # Cloudflare R2 helper
+│       ├── _email.js       # Resend email helper
+│       ├── auth-google.js  # Google OAuth redirect
+│       ├── auth-github.js  # GitHub OAuth redirect
+│       ├── auth-me.js      # Get current user
+│       ├── auth-logout.js  # Clear session
+│       ├── clone.js        # Trigger clone pipeline
+│       ├── upload.js       # Webhook: R2 upload + email
+│       └── download.js     # Presigned R2 download
 ├── ARCHITECTURE.md
 ├── MANUAL.md
 ├── ROADMAP.md
