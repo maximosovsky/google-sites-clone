@@ -32,9 +32,18 @@ Options:
   --serve              Start local server (port 3456) after build
   --custom-nav         Use custom sidebar navigation
   --inline             Keep images inline (base64) instead of separate files
+  --zip                Create ZIP archive of site/ after build
   -V, --version        Show version
   -h, --help           Show help
 ```
+
+### Deploy to GitHub Pages
+
+```bash
+gsclone deploy ./clone/site --repo username/my-clone
+```
+
+Pushes `site/` to the `gh-pages` branch. Enable GitHub Pages in repo Settings → Pages → Branch: `gh-pages`.
 
 ---
 

@@ -29,10 +29,13 @@
 - [x] SPA navigation fallback for failed pages
 - [x] Merge: SingleFile styles + Puppeteer content
 - [x] Download images from Google CDN → local files
-- [x] YouTube → thumbnails + play button
+- [x] YouTube/Vimeo → thumbnails + play button
+- [x] Video grid (YT/Vimeo/GDrive) injected into SF pages
+- [x] Root page filtering (index.html reserved for nav shell)
 - [x] Generate sitemap.xml + robots.txt
 - [x] Footer badge on all pages
 - [x] CLI interface (Commander.js)
+- [x] Clone report dashboard (clickable chips, total size)
 
 ---
 
@@ -48,22 +51,17 @@
 
 ---
 
-## 🔜 Phase 3: Web UI + Backend
+## ✅ Phase 3: npm publish (done)
 
-- [ ] Progress indicator (WebSocket/SSE)
-- [ ] Queue status page
-- [ ] ZIP download from browser
-- [ ] GitHub Actions backend (Puppeteer + SingleFile)
-- [ ] API: start job → poll status → download result
-- [ ] GitHub API: create repo + push to GitHub Pages
+- [x] npm publish (`npx google-sites-clone URL`)
+- [x] MANUAL.md user manual
+- [x] `.npmignore`, dynamic version in CLI
 
 ---
 
 ## 🔜 Phase 4: Distribution
 
-- [ ] npm publish (`npx google-sites-clone`)
-- [ ] GitHub Pages deploy action
-- [ ] Clone report (pages / YouTube / errors)
+- [ ] GitHub Pages deploy (`gsclone deploy`)
 - [ ] Rate limits (max pages, cooldown)
 
 ---

@@ -34,6 +34,8 @@ Google Sites stores your content behind an SPA that search engines can't index a
 | 🗺️ SEO ready | Generates `sitemap.xml` + `robots.txt` |
 | ⚡ Batch processing | 5 pages per batch with anti-rate-limit pauses |
 | 🔄 SPA fallback | Internal navigation for pages that fail direct URL loading |
+| 🚀 GitHub Pages deploy | One command to push to gh-pages branch |
+| 📦 ZIP export | Create downloadable archive of cloned site |
 
 ---
 
@@ -142,7 +144,8 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 - [x] Clone report dashboard
 - [x] Landing page (gsclone.osovsky.com)
 - [x] YouTube/Vimeo thumbnail download
-- [ ] GitHub Pages deploy
+- [x] GitHub Pages deploy
+- [x] ZIP export
 - [ ] npm publish
 
 ---
