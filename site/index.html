@@ -169,6 +169,17 @@
               <label><input type="checkbox"> Custom navigation</label>
               <label><input type="checkbox"> Full inline (base64)</label>
             </div>
+            <!-- Clone status card -->
+            <div id="cloneStatus"
+              style="display:none;margin-top:16px;background:#f0fdf4;border:2px solid #2a9d5c;border-radius:12px;padding:16px;text-align:left;max-width:540px;margin-left:auto;margin-right:auto">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <span style="font-size:20px" id="statusIcon">⏳</span>
+                <span style="font-weight:700;color:#1a1a2e" id="statusTitle">Processing...</span>
+              </div>
+              <p style="font-size:14px;color:#333;margin:0 0 8px;word-break:break-all" id="statusSite"></p>
+              <img id="statusPreview" src="" alt="" style="display:none;width:100%;border-radius:8px;margin-bottom:8px">
+              <p style="font-size:13px;color:#666;margin:0" id="statusMsg"></p>
+            </div>
           </div>
         </div>
         <div class="hero-image">
@@ -348,13 +359,38 @@
           body: JSON.stringify({ url, email }),
         });
         const data = await res.json();
+        const card = document.getElementById('cloneStatus');
         if (data.ok) {
-          alert(data.message || 'Clone started!');
+          card.style.display = 'block';
+          card.style.background = '#f0fdf4';
+          card.style.borderColor = '#2a9d5c';
+          document.getElementById('statusIcon').textContent = '✅';
+          document.getElementById('statusTitle').textContent = data.siteTitle || 'Clone started!';
+          document.getElementById('statusSite').textContent = url;
+          document.getElementById('statusMsg').textContent = email ? '📧 Check your email — confirmation sent. We\'ll email download links when ready.' : '⏱ Usually takes 3–10 minutes.';
+          const img = document.getElementById('statusPreview');
+          if (data.ogImage) { img.src = data.ogImage; img.style.display = 'block'; }
+          else { img.style.display = 'none'; }
         } else {
-          alert('❌ Error: ' + (data.error || 'Unknown error'));
+          card.style.display = 'block';
+          card.style.background = '#fef2f2';
+          card.style.borderColor = '#ef4444';
+          document.getElementById('statusIcon').textContent = '❌';
+          document.getElementById('statusTitle').textContent = 'Error';
+          document.getElementById('statusSite').textContent = data.error || 'Unknown error';
+          document.getElementById('statusMsg').textContent = '';
+          document.getElementById('statusPreview').style.display = 'none';
         }
       } catch (e) {
-        alert('❌ Network error: ' + e.message);
+        const card = document.getElementById('cloneStatus');
+        card.style.display = 'block';
+        card.style.background = '#fef2f2';
+        card.style.borderColor = '#ef4444';
+        document.getElementById('statusIcon').textContent = '❌';
+        document.getElementById('statusTitle').textContent = 'Network error';
+        document.getElementById('statusSite').textContent = e.message;
+        document.getElementById('statusMsg').textContent = '';
+        document.getElementById('statusPreview').style.display = 'none';
       }
       this.querySelector('.btn-text').hidden = false;
       this.querySelector('.btn-loading').hidden = true;
