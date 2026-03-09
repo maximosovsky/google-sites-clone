@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="cover.jpg" alt="Google Sites Clone" width="200">
+
 # 🌐 Google Sites Clone
 
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
