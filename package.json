@@ -1,6 +1,6 @@
 {
     "name": "google-sites-clone",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Clone any Google Sites page to static HTML. Two-pass pipeline: SingleFile + Puppeteer.",
     "main": "lib/index.js",
     "bin": {
