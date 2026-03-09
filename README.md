@@ -4,7 +4,9 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Puppeteer](https://img.shields.io/badge/Puppeteer-22-40B5A4?style=for-the-badge&logo=puppeteer&logoColor=white)
+![npm](https://img.shields.io/npm/v/google-sites-clone?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
 **Clone any Google Sites page to static HTML — own your content forever**
 
@@ -70,7 +72,19 @@ Options:
   --serve              Start local server after build
   --custom-nav         Use custom sidebar navigation
   --inline             Keep images inline (base64)
+  --zip                Create ZIP archive of site after build
 ```
+
+</details>
+
+<details>
+<summary>🚀 Deploy to GitHub Pages</summary>
+
+```bash
+gsclone deploy ./clone/site --repo username/my-clone
+```
+
+Pushes `site/` to the `gh-pages` branch. Enable Pages in repo Settings → Pages → Branch: `gh-pages`.
 
 </details>
 
@@ -119,14 +133,15 @@ google-sites-clone/
 │   ├── images.js           # Base64 → local images
 │   ├── video.js            # YouTube/Vimeo thumbnail download
 │   ├── build.js            # iframe nav + page assembly
-│   └── report.js           # Clone report dashboard
+│   ├── report.js           # Clone report dashboard
+│   ├── deploy.js           # GitHub Pages deploy
+│   └── zip.js              # ZIP archive creation
 ├── rebuild.js              # Quick rebuild from cache
 ├── site/
-│   ├── index.html          # Landing page (gsclone.osovsky.com)
-│   └── style.css           # Design system
+│   └── index.html          # Landing page
 ├── ARCHITECTURE.md
+├── MANUAL.md
 ├── ROADMAP.md
-├── llms.txt
 └── package.json
 ```
 
@@ -142,11 +157,11 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 - [x] Image localization
 - [x] iframe-based navigation (sidebar + content)
 - [x] Clone report dashboard
-- [x] Landing page (gsclone.osovsky.com)
 - [x] YouTube/Vimeo thumbnail download
+- [x] Video grid (YT/Vimeo/GDrive)
 - [x] GitHub Pages deploy
 - [x] ZIP export
-- [ ] npm publish
+- [x] npm publish
 
 ---
 
