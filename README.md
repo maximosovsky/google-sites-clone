@@ -49,6 +49,8 @@ Google Sites stores your content behind an SPA that search engines can't index a
 npx google-sites-clone https://sites.google.com/view/your-site
 ```
 
+📦 [View on npm](https://www.npmjs.com/package/google-sites-clone)
+
 <details>
 <summary>📋 Manual setup</summary>
 
