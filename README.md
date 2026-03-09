@@ -30,6 +30,7 @@ Google Sites stores your content behind an SPA that search engines can't index a
 | 🎨 Two-pass pipeline | SingleFile for CSS/images + Puppeteer for clean content |
 | 🖼️ Image localization | Downloads all images as local files (no CDN dependency) |
 | 📺 YouTube thumbnails | Converts embedded iframes to clickable thumbnails |
+| 🎬 Video grid | Injects CSS Grid of video thumbnails into SingleFile pages |
 | 🗺️ SEO ready | Generates `sitemap.xml` + `robots.txt` |
 | ⚡ Batch processing | 5 pages per batch with anti-rate-limit pauses |
 | 🔄 SPA fallback | Internal navigation for pages that fail direct URL loading |
@@ -81,7 +82,7 @@ URL → [1. Crawl]      → page-map.json (all pages + structure)
     → [3. Puppeteer]   → _content/ Clean content + iframe sources
     → [4. Images]      → site/images/ base64 → local files
     → [4b. Video]      → site/thumbnails/ YouTube/Vimeo thumbs
-    → [5. Build]       → site/ iframe nav + pages + report
+    → [5. Build]       → site/ iframe nav + pages + video grid + report
 ```
 
 | Pass | Tool | Captures |
@@ -91,7 +92,7 @@ URL → [1. Crawl]      → page-map.json (all pages + structure)
 | 3 | Puppeteer (batch ×5) | Clean text, links, iframe srcs → `_content/` |
 | 4 | Base64 decoder | Images from SingleFile → `site/images/` |
 | 4b | Video scanner | YouTube/Vimeo thumbnails → `site/thumbnails/` |
-| 5 | Build script | iframe nav + report + sitemap → `site/` |
+| 5 | Build script | iframe nav + video grid + report + sitemap → `site/` |
 
 ---
 
@@ -140,7 +141,7 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 - [x] iframe-based navigation (sidebar + content)
 - [x] Clone report dashboard
 - [x] Landing page (gsclone.osovsky.com)
-- [ ] YouTube/Vimeo thumbnail download
+- [x] YouTube/Vimeo thumbnail download
 - [ ] GitHub Pages deploy
 - [ ] npm publish
 

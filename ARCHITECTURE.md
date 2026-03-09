@@ -35,7 +35,7 @@ flowchart LR
 | `puppeteer.js` | page-map | `_content/*.html` (clean text + iframes) |
 | `images.js` | _pages/ + _content/ | `site/images/*` (decoded files) |
 | `video.js` | _content/ | `site/thumbnails/*` (YT/Vimeo thumbs) |
-| `build.js` | all above | `site/` (index.html + iframe nav + pages) |
+| `build.js` | all above | `site/` (index.html + iframe nav + pages + video grid) |
 | `report.js` | page-map + _pages/ + _content/ | `report.html` (comparison dashboard) |
 
 ---
@@ -88,6 +88,10 @@ flowchart TB
 - **Click sidebar** → changes `iframe.src` → page loads on right
 - **Mobile** = hamburger ☰ toggles sidebar
 
+### Root Page Filtering
+
+The crawler marks the root page as `file: "index.html"` in page-map.json. Since `build.js` generates its own `index.html` (navigation shell), entries with `file === 'index.html'` are excluded from the content build loop and sidebar navigation.
+
 ---
 
 ## 📺 Video Pipeline
@@ -108,6 +112,21 @@ flowchart LR
 ```
 
 Thumbnails replace `<iframe>` placeholders with clickable images + play button overlay.
+
+### Video Grid (build.js → SF pages)
+
+SingleFile pages don't contain `data-iframe-src` placeholders (SingleFile strips iframes). To restore videos:
+
+1. `buildVideoGrid()` reads the matching `_content/` file for each SF page
+2. Extracts YouTube/Vimeo IDs using the same regex patterns as `video.js`
+3. Checks `site/thumbnails/` for downloaded thumbnail files
+4. Generates an inline-styled CSS Grid with clickable thumbnails (or text fallback)
+5. Injects the grid right after `<body>` in the SF HTML
+
+Key design decisions:
+- **`all:initial`** on the container — resets all inherited SF styles, isolates the grid
+- **Inline styles only** — no `<style>` block needed, no CSS conflicts with SF
+- **`auto-fill, minmax(200px, 1fr)`** — responsive 1–4 columns depending on width
 
 ---
 
