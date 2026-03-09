@@ -10,6 +10,22 @@ on:
         description: Email for notification (optional)
         required: false
         type: string
+      webhook_url:
+        description: Webhook URL for upload notification
+        required: false
+        type: string
+      webhook_secret:
+        description: Webhook secret for auth
+        required: false
+        type: string
+      gh_token:
+        description: User GitHub token for Pages deploy
+        required: false
+        type: string
+      gh_user:
+        description: GitHub username for Pages deploy
+        required: false
+        type: string
 
 jobs:
   clone:
@@ -50,3 +66,23 @@ jobs:
           name: clone-result
           path: clone-result.zip
           retention-days: 7
+
+      - name: Send to webhook
+        if: github.event.inputs.webhook_url != ''
+        run: |
+          ZIP_B64=$(base64 -w 0 clone-result.zip)
+          REPORT_HTML=""
+          if [ -f clone-output/site/report.html ]; then
+            REPORT_HTML=$(cat clone-output/site/report.html)
+          fi
+          jq -n \
+            --arg email "${{ github.event.inputs.email }}" \
+            --arg siteUrl "${{ github.event.inputs.url }}" \
+            --arg zip "$ZIP_B64" \
+            --arg report "$REPORT_HTML" \
+            '{email: $email, siteUrl: $siteUrl, zip: $zip, report: $report}' | \
+          curl -s -X POST "${{ github.event.inputs.webhook_url }}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ github.event.inputs.webhook_secret }}" \
+            -d @-
+          echo "Webhook sent"
