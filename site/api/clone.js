@@ -17,11 +17,18 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Server not configured' });
     }
 
-    // Get user email from session or override
+    // Get user email and GitHub token from sessions
     let email = overrideEmail || '';
+    let ghToken = '';
+    let ghUser = '';
     if (jwtSecret) {
-        const user = getSessionFromReq(req, jwtSecret);
-        if (user && !email) email = user.email || '';
+        const sessions = getSessionFromReq(req, jwtSecret);
+        if (sessions.google && !email) email = sessions.google.email || '';
+        if (sessions.github) {
+            if (!email) email = sessions.github.email || '';
+            ghToken = sessions.github.token || '';
+            ghUser = sessions.github.name || '';
+        }
     }
 
     try {
@@ -41,17 +48,21 @@ export default async function handler(req, res) {
                         email,
                         webhook_url: `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}/api/upload`,
                         webhook_secret: webhookSecret || '',
+                        gh_token: ghToken,
+                        gh_user: ghUser,
                     },
                 }),
             }
         );
 
         if (response.status === 204) {
+            const parts = [];
+            if (email) parts.push('📧 Email with download link when ready.');
+            if (ghUser) parts.push(`🚀 Auto-deploy to ${ghUser}.github.io.`);
+            if (!parts.length) parts.push('Check GitHub Actions for progress.');
             return res.status(200).json({
                 ok: true,
-                message: email
-                    ? 'Clone started! You will receive an email when ready.'
-                    : 'Clone started! Check GitHub Actions for progress.',
+                message: `✅ Clone started!\n\n${parts.join('\n')}`,
             });
         }
 

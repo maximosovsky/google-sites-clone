@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
-        scope: 'user:email',
+        scope: 'user:email repo',
     });
 
     res.writeHead(302, { Location: `https://github.com/login/oauth/authorize?${params}` });

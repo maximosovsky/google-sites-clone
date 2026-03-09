@@ -12,7 +12,7 @@
 
 **Clone any Google Sites page to static HTML — own your content forever**
 
-[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Tech Stack](#-tech-stack) · [Roadmap](ROADMAP.md)
+[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Tech Stack](#-tech-stack) · [npm](https://www.npmjs.com/package/google-sites-clone) · [Roadmap](ROADMAP.md)
 
 </div>
 

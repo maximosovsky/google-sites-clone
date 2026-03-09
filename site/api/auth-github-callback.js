@@ -62,12 +62,13 @@ export default async function handler(req, res) {
             }
         }
 
-        // Set session cookie
+        // Set session cookie (include token for deploy)
         setSessionCookie(res, {
             provider: 'github',
             name: user.login || user.name || '',
             email,
             picture: user.avatar_url || '',
+            token: tokenData.access_token,
         }, jwtSecret);
 
         // Redirect to landing page

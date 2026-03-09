@@ -1,5 +1,6 @@
 # 🏗️ google-sites-clone — Architecture
 
+[![npm](https://img.shields.io/npm/v/google-sites-clone?logo=npm)](https://www.npmjs.com/package/google-sites-clone)
 ---
 
 ## ⚙️ CLI Pipeline

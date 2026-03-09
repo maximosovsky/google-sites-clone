@@ -6,10 +6,13 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Server not configured' });
     }
 
-    const user = getSessionFromReq(req, jwtSecret);
-    if (!user) {
-        return res.status(401).json({ error: 'Not authenticated' });
-    }
+    const sessions = getSessionFromReq(req, jwtSecret);
 
-    return res.status(200).json(user);
+    // Strip tokens — never expose to frontend
+    const safe = (u) => u ? { provider: u.provider, name: u.name, email: u.email, picture: u.picture } : null;
+
+    return res.status(200).json({
+        google: safe(sessions.google),
+        github: safe(sessions.github),
+    });
 }
