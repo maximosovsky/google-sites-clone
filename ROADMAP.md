@@ -59,16 +59,18 @@
 
 ---
 
-## 🔜 Phase 4: Distribution
+## ✅ Phase 4: Distribution (done)
 
-- [ ] GitHub Pages deploy (`gsclone deploy`)
-- [ ] Rate limits (max pages, cooldown)
+- [x] GitHub Pages deploy (`gsclone deploy`)
+- [x] ZIP export (`--zip`)
+- [x] README per guidelines
+- [x] Vercel landing page fix
 
 ---
 
-## 🔜 Phase 5: Polish
+## 🔜 Phase 5: SaaS (optional)
 
-- [ ] Email delivery (Resend)
-- [ ] Cloudflare R2 storage (ZIP 7d, report 360d)
 - [ ] Real Google OAuth
 - [ ] Real GitHub OAuth
+- [ ] Email delivery (Resend)
+- [ ] Cloudflare R2 storage (ZIP 7d, report 360d)

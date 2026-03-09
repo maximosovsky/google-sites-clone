@@ -21,6 +21,8 @@ program
     .option('--custom-nav', 'Use custom sidebar navigation')
     .option('--inline', 'Keep images inline (base64) instead of separate files')
     .option('--zip', 'Create ZIP archive of the site after build')
+    .option('--max-pages <n>', 'Maximum number of pages to clone', parseInt)
+    .option('--cooldown <ms>', 'Pause between batches in ms (default: 60000)', parseInt)
     .action(async (url, options) => {
         console.log(`\n🔄 google-sites-clone v${pkg.version}\n`);
 
@@ -37,6 +39,8 @@ program
                 serve: options.serve,
                 nav: options.customNav ? 'custom' : 'original',
                 inline: options.inline,
+                maxPages: options.maxPages,
+                cooldown: options.cooldown,
             });
 
             if (options.zip) {
