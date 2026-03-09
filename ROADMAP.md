@@ -68,9 +68,9 @@
 
 ---
 
-## 🔜 Phase 5: SaaS (optional)
+## ✅ Phase 5: SaaS (done)
 
-- [ ] Real Google OAuth
-- [ ] Real GitHub OAuth
-- [ ] Email delivery (Resend)
-- [ ] Cloudflare R2 storage (ZIP 7d, report 360d)
+- [x] Real Google OAuth
+- [x] Real GitHub OAuth
+- [x] Email delivery (Resend)
+- [x] Cloudflare R2 storage (ZIP 7d, report 360d)

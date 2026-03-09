@@ -163,10 +163,10 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 - [x] ZIP export
 - [x] npm publish
 - [x] Rate limits (max pages, cooldown)
-- [ ] Email delivery (Resend)
-- [ ] Cloudflare R2 storage
-- [ ] Real Google OAuth
-- [ ] Real GitHub OAuth
+- [x] Email delivery (Resend)
+- [x] Cloudflare R2 storage
+- [x] Real Google OAuth
+- [x] Real GitHub OAuth
 
 ---
 

@@ -147,6 +147,11 @@
               </button>
             </div>
             <div class="clone-options">
+              <div class="email-row" style="width:100%;margin-bottom:8px">
+                <input type="email" id="emailInput" placeholder="Email for download link (optional)"
+                  autocomplete="email" spellcheck="false"
+                  style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px">
+              </div>
               <label><input type="checkbox" checked> Download images</label>
               <label><input type="checkbox" checked> YouTube thumbnails</label>
               <label><input type="checkbox"> Custom navigation</label>
@@ -315,6 +320,7 @@
     // Clone button
     document.getElementById('cloneBtn').addEventListener('click', async function () {
       const url = document.getElementById('urlInput').value.trim();
+      const email = document.getElementById('emailInput').value.trim();
       if (!url) { document.getElementById('urlInput').focus(); return; }
       if (!url.includes('sites.google.com')) {
         alert('Please enter a valid Google Sites URL');
@@ -327,11 +333,11 @@
         const res = await fetch('/api/clone', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({ url, email }),
         });
         const data = await res.json();
         if (data.ok) {
-          alert('✅ Clone started!\n\nThe pipeline is running on GitHub Actions.\nCheck the Actions tab for progress and download the ZIP when ready.\n\nhttps://github.com/maximosovsky/google-sites-clone/actions');
+          alert(data.message || 'Clone started!');
         } else {
           alert('❌ Error: ' + (data.error || 'Unknown error'));
         }
@@ -354,38 +360,29 @@
         this.value.length > 10 ? '#c00' : '';
     });
 
-    // === GOOGLE AUTH STUB ===
-    let _isAuthorized = false;
+    // === AUTH STATE ===
+    let _googleUser = null;
+    let _ghUser = null;
 
+    // Google: click icon → redirect to OAuth or toggle dropdown
     function handleAvatarClick(e) {
       e.stopPropagation();
-      if (_isAuthorized) {
+      if (_googleUser) {
         document.getElementById('avatarDropdown').classList.toggle('open');
       } else {
-        // Stub: simulate Google login
-        const stubUser = {
-          name: 'Maxim Osovsky',
-          email: 'osovsky@gmail.com',
-          picture: 'https://lh3.googleusercontent.com/a/default-user=s96-c'
-        };
-        localStorage.setItem('gsclone_user', JSON.stringify(stubUser));
-        applyAuth(stubUser);
+        window.location.href = '/api/auth-google';
       }
     }
 
+    // Google: sign out → clear cookie via API
     function handleLogout(e) {
       e.stopPropagation();
-      localStorage.removeItem('gsclone_user');
-      _isAuthorized = false;
-      document.getElementById('userAvatar').src = '';
-      document.getElementById('userAvatar').classList.remove('visible');
-      document.getElementById('googleIcon').classList.remove('hidden');
-      document.getElementById('avatarWrap').dataset.tooltip = 'Sign in with Google';
-      document.getElementById('avatarDropdown').classList.remove('open');
+      window.location.href = '/api/auth-logout';
     }
 
+    // Apply Google user data to UI
     function applyAuth(user) {
-      _isAuthorized = true;
+      _googleUser = user;
       const img = document.getElementById('userAvatar');
       img.src = user.picture;
       img.alt = user.name || user.email || '';
@@ -394,39 +391,29 @@
       document.getElementById('avatarWrap').removeAttribute('data-tooltip');
       document.getElementById('dropdownName').textContent = user.name || '';
       document.getElementById('dropdownEmail').textContent = user.email || '';
+      const emailInput = document.getElementById('emailInput');
+      if (user.email && !emailInput.value) emailInput.value = user.email;
     }
 
-    // === GITHUB AUTH STUB ===
-    let _ghAuthorized = false;
-
+    // GitHub: click icon → redirect to OAuth or toggle dropdown
     function handleGhAvatarClick(e) {
       e.stopPropagation();
-      if (_ghAuthorized) {
+      if (_ghUser) {
         document.getElementById('ghAvatarDropdown').classList.toggle('open');
       } else {
-        const stubUser = {
-          name: 'maximosovsky',
-          email: 'osovsky@gmail.com',
-          picture: 'https://avatars.githubusercontent.com/u/maximosovsky?s=96'
-        };
-        localStorage.setItem('gsclone_gh_user', JSON.stringify(stubUser));
-        applyGhAuth(stubUser);
+        window.location.href = '/api/auth-github';
       }
     }
 
+    // GitHub: sign out → clear cookie via API
     function handleGhLogout(e) {
       e.stopPropagation();
-      localStorage.removeItem('gsclone_gh_user');
-      _ghAuthorized = false;
-      document.getElementById('ghUserAvatar').src = '';
-      document.getElementById('ghUserAvatar').classList.remove('visible');
-      document.getElementById('githubIcon').classList.remove('hidden');
-      document.getElementById('ghAvatarWrap').dataset.tooltip = 'Sign in with GitHub';
-      document.getElementById('ghAvatarDropdown').classList.remove('open');
+      window.location.href = '/api/auth-logout';
     }
 
+    // Apply GitHub user data to UI
     function applyGhAuth(user) {
-      _ghAuthorized = true;
+      _ghUser = user;
       const img = document.getElementById('ghUserAvatar');
       img.src = user.picture;
       img.alt = user.name || user.email || '';
@@ -435,6 +422,8 @@
       document.getElementById('ghAvatarWrap').removeAttribute('data-tooltip');
       document.getElementById('ghDropdownName').textContent = user.name || '';
       document.getElementById('ghDropdownEmail').textContent = user.email || '';
+      const emailInput = document.getElementById('emailInput');
+      if (user.email && !emailInput.value) emailInput.value = user.email;
     }
 
     // Close dropdowns on outside click
@@ -443,23 +432,19 @@
       document.getElementById('ghAvatarDropdown').classList.remove('open');
     });
 
-    // Restore auth from localStorage
+    // Restore auth from server session cookie
     (function () {
-      const saved = localStorage.getItem('gsclone_user');
-      if (saved) {
-        try { applyAuth(JSON.parse(saved)); }
-        catch (e) { localStorage.removeItem('gsclone_user'); }
-      } else {
-        document.getElementById('avatarWrap').dataset.tooltip = 'Sign in with Google';
-      }
+      document.getElementById('avatarWrap').dataset.tooltip = 'Sign in with Google';
+      document.getElementById('ghAvatarWrap').dataset.tooltip = 'Sign in with GitHub';
 
-      const ghSaved = localStorage.getItem('gsclone_gh_user');
-      if (ghSaved) {
-        try { applyGhAuth(JSON.parse(ghSaved)); }
-        catch (e) { localStorage.removeItem('gsclone_gh_user'); }
-      } else {
-        document.getElementById('ghAvatarWrap').dataset.tooltip = 'Sign in with GitHub';
-      }
+      fetch('/api/auth-me')
+        .then(r => r.ok ? r.json() : null)
+        .then(user => {
+          if (!user) return;
+          if (user.provider === 'google') applyAuth(user);
+          else if (user.provider === 'github') applyGhAuth(user);
+        })
+        .catch(() => { });
     })();
   </script>
 

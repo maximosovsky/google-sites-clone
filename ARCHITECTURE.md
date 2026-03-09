@@ -40,6 +40,38 @@ flowchart LR
 
 ---
 
+## 🔐 SaaS API (Vercel Serverless)
+
+```
+site/api/
+├── _session.js            ← HMAC session helper (Node.js crypto)
+├── _r2.js                 ← Cloudflare R2 upload/download (S3 SDK)
+├── _email.js              ← Resend email helper
+├── auth-google.js         ← Redirect → Google OAuth consent
+├── auth-google-callback.js ← Exchange code → set session cookie
+├── auth-github.js         ← Redirect → GitHub OAuth
+├── auth-github-callback.js ← Exchange code → set session cookie
+├── auth-me.js             ← GET current user from cookie
+├── auth-logout.js         ← Clear session cookie
+├── clone.js               ← POST → trigger GitHub Actions + email
+├── upload.js              ← POST webhook → R2 upload + send email
+└── download.js            ← GET → presigned R2 download URL
+```
+
+| Route | Method | Auth | Purpose |
+|-------|--------|------|---------|
+| `/api/auth-google` | GET | — | Redirect to Google consent |
+| `/api/auth-google-callback` | GET | — | Exchange code, set cookie |
+| `/api/auth-github` | GET | — | Redirect to GitHub auth |
+| `/api/auth-github-callback` | GET | — | Exchange code, set cookie |
+| `/api/auth-me` | GET | Cookie | Return current user |
+| `/api/auth-logout` | GET | — | Clear session, redirect |
+| `/api/clone` | POST | Optional | Trigger clone pipeline |
+| `/api/upload` | POST | WEBHOOK_SECRET | Receive ZIP + report → R2 + email |
+| `/api/download` | GET | — | Redirect to presigned R2 URL |
+
+---
+
 ## 📂 Output Structure
 
 ```
@@ -174,6 +206,12 @@ flowchart TB
     subgraph DELIVERY["📬 Delivery"]
         R["Email via Resend"]
         S["GitHub Pages"]
+    end
+
+    subgraph AUTH["🔐 OAuth"]
+        GA["Google OAuth 2.0"]
+        GHA["GitHub OAuth"]
+        SESS["HMAC Session Cookie"]
     end
 
     A --> B
