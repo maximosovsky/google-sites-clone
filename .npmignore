@@ -1,0 +1,8 @@
+# npm publish — exclude non-essential files
+test-clone/
+site/
+.gemini/
+.agent/
+*.tgz
+rebuild.js
+gsclone_architecture.md

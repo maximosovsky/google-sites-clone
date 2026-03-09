@@ -10,13 +10,34 @@
         "start": "node bin/gsclone.js",
         "dev": "node bin/gsclone.js"
     },
+    "files": [
+        "bin/",
+        "lib/",
+        "README.md",
+        "MANUAL.md",
+        "LICENSE"
+    ],
     "keywords": [
         "google-sites",
         "clone",
+        "export",
         "static-html",
         "puppeteer",
-        "singlefile"
+        "singlefile",
+        "backup",
+        "scraper"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/maximosovsky/google-sites-clone"
+    },
+    "homepage": "https://gsclone.osovsky.com",
+    "bugs": {
+        "url": "https://github.com/maximosovsky/google-sites-clone/issues"
+    },
+    "engines": {
+        "node": ">=18"
+    },
     "author": "Maxim Osovsky",
     "license": "MIT",
     "dependencies": {

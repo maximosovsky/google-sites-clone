@@ -2,11 +2,12 @@
 // gsclone CLI — Clone Google Sites to static HTML
 const { program } = require('commander');
 const { clone } = require('../lib/index');
+const pkg = require('../package.json');
 
 program
     .name('gsclone')
     .description('Clone any Google Sites page to static HTML')
-    .version('0.1.0')
+    .version(pkg.version)
     .argument('<url>', 'Google Sites URL to clone')
     .option('-o, --output <dir>', 'Output directory', './clone')
     .option('--no-images', 'Skip image localization')
@@ -16,7 +17,7 @@ program
     .option('--custom-nav', 'Use custom sidebar navigation')
     .option('--inline', 'Keep images inline (base64) instead of separate files')
     .action(async (url, options) => {
-        console.log(`\n🔄 google-sites-clone v0.1.0\n`);
+        console.log(`\n🔄 google-sites-clone v${pkg.version}\n`);
 
         if (!url.includes('sites.google.com')) {
             console.error('❌ URL must be a Google Sites page (sites.google.com)');
