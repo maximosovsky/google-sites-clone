@@ -80,7 +80,7 @@ gsclone <url> [options]
 Options:
   -o, --output <dir>   Output directory (default: ./clone)
   --max-pages <n>      Limit number of pages to clone
-  --cooldown <ms>      Pause between page loads in ms (default: 1000)
+  --cooldown <ms>      Pause between batches of 5 pages in ms (default: 60000)
   --no-images          Skip image localization
   --no-youtube         Skip YouTube thumbnail download
   --serve              Start local server after build
