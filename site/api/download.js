@@ -1,7 +1,21 @@
 import { getDownloadUrl } from './_r2.js';
 
 export default async function handler(req, res) {
-    const { id, type } = req.query;
+    const { id, type, key: directKey } = req.query;
+
+    // Direct key access (for preview images etc.)
+    if (directKey) {
+        try {
+            const url = await getDownloadUrl(directKey);
+            res.writeHead(302, { Location: url });
+            return res.end();
+        } catch (e) {
+            if (e.name === 'NoSuchKey' || e.Code === 'NoSuchKey') {
+                return res.status(404).json({ error: 'File not found or expired' });
+            }
+            return res.status(500).json({ error: e.message });
+        }
+    }
 
     if (!id || !type) {
         return res.status(400).json({ error: 'Missing id or type parameter' });

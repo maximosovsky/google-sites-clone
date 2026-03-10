@@ -1,5 +1,7 @@
+import crypto from 'crypto';
 import { getSessionFromReq } from './_session.js';
 import { sendEmail } from './_email.js';
+import { uploadToR2 } from './_r2.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -35,6 +37,7 @@ export default async function handler(req, res) {
     // Fetch site preview (title + og:image)
     let siteTitle = url;
     let ogImage = '';
+    let ogImageR2 = '';
     try {
         const pageRes = await fetch(url, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; gsclone/1.0)' },
@@ -45,6 +48,22 @@ export default async function handler(req, res) {
         if (titleMatch) siteTitle = titleMatch[1].replace(/ - Google Sites$/, '').trim();
         const ogMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
         if (ogMatch) ogImage = ogMatch[1];
+
+        // Download og:image and upload to R2 for email compatibility
+        if (ogImage) {
+            try {
+                const imgRes = await fetch(ogImage, { redirect: 'follow' });
+                if (imgRes.ok) {
+                    const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+                    const ct = imgRes.headers.get('content-type') || 'image/png';
+                    const ext = ct.includes('jpeg') || ct.includes('jpg') ? 'jpg' : 'png';
+                    const imgKey = `previews/${crypto.randomBytes(8).toString('hex')}.${ext}`;
+                    await uploadToR2(imgKey, imgBuf, ct, { ttl: '7d' });
+                    const baseUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
+                    ogImageR2 = `${baseUrl}/api/download?key=${imgKey}`;
+                }
+            } catch { /* preview image upload is optional */ }
+        }
     } catch { /* ignore preview errors */ }
 
     try {
@@ -72,6 +91,8 @@ export default async function handler(req, res) {
         );
 
         if (response.status === 204) {
+            const previewImg = ogImageR2 || ogImage;
+
             // Send immediate "processing started" email
             if (email) {
                 try {
@@ -85,7 +106,7 @@ export default async function handler(req, res) {
                                 <div style="background:#f8f9ff;border-radius:12px;padding:16px;margin:16px 0">
                                     <p style="font-weight:bold;margin:0 0 4px">${siteTitle}</p>
                                     <p style="font-size:13px;color:#666;margin:0;word-break:break-all">${url}</p>
-                                    ${ogImage ? `<img src="${ogImage}" style="width:100%;border-radius:8px;margin-top:12px" alt="preview"/>` : ''}
+                                    ${previewImg ? `<img src="${previewImg}" style="width:100%;border-radius:8px;margin-top:12px" alt="preview"/>` : ''}
                                 </div>
                                 <p style="font-size:14px;color:#666">⏱ Usually takes 3–10 minutes. We'll email you when the ZIP and report are ready.</p>
                                 <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
@@ -95,7 +116,7 @@ export default async function handler(req, res) {
                             </div>
                         `,
                     });
-                } catch (emailErr) { /* store error for debug */
+                } catch (emailErr) {
                     var emailError = emailErr.message;
                 }
             }
@@ -103,7 +124,7 @@ export default async function handler(req, res) {
             return res.status(200).json({
                 ok: true,
                 siteTitle,
-                ogImage,
+                ogImage: previewImg,
                 emailError: emailError || null,
                 message: `✅ Clone started!\n\n${siteTitle}`,
             });

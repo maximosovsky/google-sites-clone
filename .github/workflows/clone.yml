@@ -67,22 +67,48 @@ jobs:
           path: clone-result.zip
           retention-days: 7
 
-      - name: Send to webhook
+      - name: Generate file ID
+        id: fileid
+        run: echo "id=$(openssl rand -hex 8)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to R2
+        if: github.event.inputs.webhook_url != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          ID="${{ steps.fileid.outputs.id }}"
+
+          # Upload ZIP (supports up to 1GB+ via multipart)
+          aws s3 cp clone-result.zip \
+            "s3://${{ secrets.R2_BUCKET }}/zips/${ID}.zip" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --content-type "application/zip"
+
+          # Upload report if exists
+          if [ -f clone-output/site/report.html ]; then
+            aws s3 cp clone-output/site/report.html \
+              "s3://${{ secrets.R2_BUCKET }}/reports/${ID}.html" \
+              --endpoint-url "$R2_ENDPOINT" \
+              --content-type "text/html"
+          fi
+
+          echo "Files uploaded: zips/${ID}.zip, reports/${ID}.html"
+
+      - name: Send webhook notification
         if: github.event.inputs.webhook_url != ''
         run: |
-          ZIP_B64=$(base64 -w 0 clone-result.zip)
-          REPORT_HTML=""
+          ID="${{ steps.fileid.outputs.id }}"
+          REPORT_EXISTS="false"
           if [ -f clone-output/site/report.html ]; then
-            REPORT_HTML=$(cat clone-output/site/report.html)
+            REPORT_EXISTS="true"
           fi
-          jq -n \
-            --arg email "${{ github.event.inputs.email }}" \
-            --arg siteUrl "${{ github.event.inputs.url }}" \
-            --arg zip "$ZIP_B64" \
-            --arg report "$REPORT_HTML" \
-            '{email: $email, siteUrl: $siteUrl, zip: $zip, report: $report}' | \
+
           curl -s -X POST "${{ github.event.inputs.webhook_url }}" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ github.event.inputs.webhook_secret }}" \
-            -d @-
-          echo "Webhook sent"
+            -d "{\"id\":\"${ID}\",\"email\":\"${{ github.event.inputs.email }}\",\"siteUrl\":\"${{ github.event.inputs.url }}\",\"hasReport\":${REPORT_EXISTS}}"
+
+          echo "Webhook sent with id=${ID}"

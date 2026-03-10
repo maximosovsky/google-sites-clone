@@ -9,7 +9,7 @@ const RESEND_API = 'https://api.resend.com/emails';
  */
 export async function sendEmail({ to, subject, html }) {
     const apiKey = process.env.RESEND_API_KEY;
-    const from = process.env.RESEND_FROM || 'Google Sites Clone <clone@gsclone.osovsky.com>';
+    const from = process.env.RESEND_FROM || 'Google Sites Clone <google-sites-clone@osovsky.com>';
 
     if (!apiKey) throw new Error('RESEND_API_KEY not configured');
 

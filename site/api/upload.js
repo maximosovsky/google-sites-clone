@@ -1,10 +1,4 @@
-import crypto from 'crypto';
-import { uploadToR2 } from './_r2.js';
 import { sendEmail } from './_email.js';
-
-export const config = {
-    api: { bodyParser: { sizeLimit: '50mb' } },
-};
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -18,37 +12,16 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { email, siteUrl } = req.body;
-    const zipBase64 = req.body.zip; // base64-encoded ZIP
-    const reportHtml = req.body.report; // HTML string
+    const { id, email, siteUrl, hasReport } = req.body;
 
-    if (!zipBase64 || !reportHtml) {
-        return res.status(400).json({ error: 'Missing zip or report' });
+    if (!id) {
+        return res.status(400).json({ error: 'Missing file id' });
     }
 
     try {
-        const id = crypto.randomBytes(8).toString('hex');
-        const zipBuffer = Buffer.from(zipBase64, 'base64');
-
-        // Upload ZIP to R2 (7 day TTL via lifecycle rule)
-        const zipKey = `zips/${id}.zip`;
-        await uploadToR2(zipKey, zipBuffer, 'application/zip', {
-            ttl: '7d',
-            email: email || '',
-            site: siteUrl || '',
-        });
-
-        // Upload report to R2 (360 day TTL via lifecycle rule)
-        const reportKey = `reports/${id}.html`;
-        await uploadToR2(reportKey, Buffer.from(reportHtml, 'utf-8'), 'text/html', {
-            ttl: '360d',
-            email: email || '',
-            site: siteUrl || '',
-        });
-
         const baseUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
         const zipUrl = `${baseUrl}/api/download?id=${id}&type=zip`;
-        const reportUrl = `${baseUrl}/api/download?id=${id}&type=report`;
+        const reportUrl = hasReport ? `${baseUrl}/api/download?id=${id}&type=report` : '';
 
         // Send email if address provided
         if (email) {
@@ -65,10 +38,12 @@ export default async function handler(req, res) {
                             </a>
                         </p>
                         <p style="font-size:13px;color:#666">ZIP link expires in 7 days.</p>
+                        ${reportUrl ? `
                         <p>
                             <a href="${reportUrl}">📊 View clone report</a>
                             <span style="font-size:13px;color:#666">(available for 360 days)</span>
                         </p>
+                        ` : ''}
                         <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
                         <p style="font-size:12px;color:#999">
                             <a href="https://gsclone.osovsky.com" style="color:#999">gsclone.osovsky.com</a>
