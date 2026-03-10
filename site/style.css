@@ -136,15 +136,21 @@ img {
 }
 
 .hero-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 40px;
+  gap: 48px;
 }
 
 .hero-text {
-  text-align: center;
+  text-align: left;
   max-width: 640px;
+}
+
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-badge {
@@ -203,7 +209,6 @@ img {
   display: flex;
   gap: 10px;
   max-width: 540px;
-  margin: 0 auto;
 }
 
 .input-group input {
@@ -234,7 +239,6 @@ img {
   margin-top: 12px;
   font-size: 13px;
   color: #767ead;
-  justify-content: center;
 }
 
 .clone-options label {
@@ -765,7 +769,16 @@ img {
   }
 
   .hero-grid {
+    grid-template-columns: 1fr;
     gap: 20px;
+  }
+
+  .hero-text {
+    text-align: center;
+  }
+
+  .hero-image {
+    display: none;
   }
 
   .hero-title {
