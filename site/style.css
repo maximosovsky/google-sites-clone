@@ -298,6 +298,13 @@ img {
   color: #767ead;
 }
 
+.pipe-desc {
+  font-size: 12px;
+  color: #767ead;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
 .pipe-connector {
   font-family: 'Sora', sans-serif;
   font-size: 20px;
