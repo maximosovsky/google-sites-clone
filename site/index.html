@@ -313,6 +313,7 @@
     })();
 
     // Clone button
+    let _previewShown = false;
     document.getElementById('cloneBtn').addEventListener('click', async function () {
       const url = document.getElementById('urlInput').value.trim();
       const email = document.getElementById('emailInput').value.trim();
@@ -322,7 +323,48 @@
         return;
       }
 
-      // Require auth — redirect to Google OAuth if not logged in
+      // Step 1: Show preview first (no auth needed)
+      if (!_googleUser && !_ghUser && !_previewShown) {
+        this.querySelector('.btn-text').hidden = true;
+        this.querySelector('.btn-loading').hidden = false;
+        this.disabled = true;
+        try {
+          const previewRes = await fetch(url);
+          const html = await previewRes.text();
+          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+          const ogMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
+          const card = document.getElementById('cloneStatus');
+          card.style.display = 'block';
+          card.style.background = '#f0f4ff';
+          card.style.borderColor = '#6078ff';
+          document.getElementById('statusIcon').textContent = '🌐';
+          document.getElementById('statusTitle').textContent = titleMatch ? titleMatch[1].trim() : 'Google Sites page';
+          document.getElementById('statusSite').textContent = url;
+          document.getElementById('statusMsg').innerHTML = '🔐 Sign in with Google to start cloning<br><a href="/api/auth-google" style="display:inline-block;padding:8px 20px;background:#4285f4;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px" onclick="localStorage.setItem(\'gsclone_pending_url\',\'' + url.replace(/'/g, "\\'") + '\')">Sign in with Google</a>';
+          const img = document.getElementById('statusPreview');
+          if (ogMatch) { img.src = ogMatch[1]; img.style.display = 'block'; }
+          else { img.style.display = 'none'; }
+          _previewShown = true;
+        } catch {
+          // CORS will likely block direct fetch — show simple preview
+          const card = document.getElementById('cloneStatus');
+          card.style.display = 'block';
+          card.style.background = '#f0f4ff';
+          card.style.borderColor = '#6078ff';
+          document.getElementById('statusIcon').textContent = '🌐';
+          document.getElementById('statusTitle').textContent = 'Google Sites page';
+          document.getElementById('statusSite').textContent = url;
+          document.getElementById('statusMsg').innerHTML = '🔐 Sign in with Google to start cloning<br><a href="/api/auth-google" style="display:inline-block;padding:8px 20px;background:#4285f4;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px" onclick="localStorage.setItem(\'gsclone_pending_url\',\'' + url.replace(/'/g, "\\'") + '\')">Sign in with Google</a>';
+          document.getElementById('statusPreview').style.display = 'none';
+          _previewShown = true;
+        }
+        this.querySelector('.btn-text').hidden = false;
+        this.querySelector('.btn-loading').hidden = true;
+        this.disabled = false;
+        return;
+      }
+
+      // Step 2: Auth redirect (if preview shown but still not logged in)
       if (!_googleUser && !_ghUser) {
         localStorage.setItem('gsclone_pending_url', url);
         window.location.href = '/api/auth-google';
