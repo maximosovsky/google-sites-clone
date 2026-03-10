@@ -67,9 +67,23 @@ site/api/
 | `/api/auth-github-callback` | GET | — | Exchange code, set cookie |
 | `/api/auth-me` | GET | Cookie | Return current user |
 | `/api/auth-logout` | GET | — | Clear session, redirect |
-| `/api/clone` | POST | Optional | Fetch preview → trigger Actions → send "started" email |
+| `/api/clone` | POST | Required (Google/GitHub) | Rate limit check → fetch preview → trigger Actions → send "started" email |
 | `/api/upload` | POST | WEBHOOK_SECRET | Receive metadata → send "ready" email with download links |
 | `/api/download` | GET | — | Redirect to presigned R2 URL (ZIP/report/preview) |
+
+---
+
+## 🎫 Usage Tiers
+
+| Tier | Auth | Clones | Max ZIP |
+|------|------|--------|---------|
+| **Free** | Google OAuth | 1 total | 250 MB |
+| **Starred** | Google + GitHub + ⭐ repo | 5/day, 20/month | 250 MB (~5 GB/month) |
+| **Unlimited** | Email offer only | ∞ | ∞ | $99/month |
+
+- Clone count tracked in **Upstash Redis** (key: `clones:{google_email}`)
+- Star check: `GET /user/starred/maximosovsky/google-sites-clone` (GitHub API)
+- Unlimited tier is never shown on site — offered via email when Starred user exhausts monthly limit
 
 ---
 
@@ -198,15 +212,21 @@ flowchart TB
         K["Merge + Images"]
         L["Video thumbnails (~50 KB each)"]
         M["sitemap.xml + robots.txt"]
-        N["ZIP (~40–200 MB)"]
+        N["ZIP (~40–250 MB)"]
         R2UP["aws s3 cp → R2"]
         WH["POST /api/upload (metadata only)"]
     end
 
-    subgraph STORAGE["☁️ Cloudflare R2 (up to 1 GB)"]
-        O["zips/ID.zip (7 days)"]
-        P["reports/ID.html (360 days)"]
-        PRV["previews/ID.png (7 days)"]
+    subgraph STORAGE["☁️ Cloudflare R2"]
+        O["zips/ID.zip (auto-delete 7d)"]
+        P["reports/ID.html (auto-delete 360d)"]
+        PRV["previews/ID.png (auto-delete 7d)"]
+    end
+
+    subgraph RATELIMIT["🎫 Rate Limit (Upstash Redis)"]
+        RL["clones:email → count"]
+        RLD["clones:daily:email:date"]
+        RLM["clones:monthly:email:month"]
     end
 
     subgraph DELIVERY["📬 Delivery"]
@@ -252,11 +272,19 @@ flowchart TB
 
 ### Storage + Email Flow
 
-1. `/api/clone` fetches og:image → uploads preview to R2 → sends "⏳ Cloning started" email
-2. GitHub Actions runs pipeline → uploads ZIP + report **directly to R2** via `aws s3 cp` (supports up to 1 GB)
+1. `/api/clone` checks rate limit (Redis) → fetches og:image → uploads preview to R2 → sends "⏳ Cloning started" email
+2. GitHub Actions runs pipeline → uploads ZIP + report **directly to R2** via `aws s3 cp` (max 250 MB for Free/Starred)
 3. Actions sends lightweight webhook `{id, email, siteUrl}` to `/api/upload`
 4. Upload handler sends "🎉 Clone ready" email with presigned download links
 5. `/api/download?id=xxx&type=zip` redirects to presigned R2 URL
+
+### R2 Lifecycle Rules (auto-cleanup)
+
+| Prefix | Auto-delete after |
+|--------|------------------|
+| `zips/` | 7 days |
+| `previews/` | 7 days |
+| `reports/` | 360 days |
 
 ### File Size Reference
 
@@ -266,8 +294,8 @@ flowchart TB
 | `_pages/*.html` (SingleFile) | ~7 MB/page | Actions artifact |
 | `_content/*.html` (Puppeteer) | ~9 KB/page | Actions artifact |
 | `thumbnails/*.jpg` | ~50 KB each | Actions artifact |
-| Final ZIP | 40–200 MB (up to 1 GB) | R2 (7 days) |
-| `report.html` | ~50 KB | R2 (360 days) |
+| Final ZIP | 40–250 MB (max 250 MB Free/Starred) | R2 (7 days, auto-delete) |
+| `report.html` | ~50 KB | R2 (360 days, auto-delete) |
 | og:image preview | ~100 KB | R2 (7 days) |
 
 ### Environment Variables
@@ -279,6 +307,7 @@ flowchart TB
 | `JWT_SECRET` | Random 32+ char string |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Cloudflare R2 |
 | `R2_BUCKET` | Bucket name (e.g. `gsclone`) |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis (rate limiting) |
 | `RESEND_API_KEY`, `RESEND_FROM` | Resend |
 | `WEBHOOK_SECRET` | Shared secret for Actions → upload |
 | `GITHUB_TOKEN` | GitHub PAT for workflow dispatch |

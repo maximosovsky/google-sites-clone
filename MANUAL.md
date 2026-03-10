@@ -78,7 +78,7 @@ Pushes `site/` to the `gh-pages` branch. Enable GitHub Pages in repo Settings �
 | 4b. Video | YouTube/Vimeo thumbnails → `site/thumbnails/` | ~50 KB each |
 | 5. Build | Sidebar nav + iframe + video grid → `site/` | — |
 | 6. Report | Quality dashboard → `report.html` | ~50 KB |
-| 7. ZIP | Archive `site/` → `clone-result.zip` | up to 1 GB |
+| 7. ZIP | Archive `site/` → `clone-result.zip` | up to 250 MB |
 | 8. R2 Upload | Direct upload via `aws s3 cp` | — |
 | 9. Email | "Clone ready!" + download links | — |
 
@@ -146,14 +146,28 @@ Session is stored as an `HttpOnly` cookie (30 days). Click your avatar → **Sig
 3. Click **Clone**
 4. Immediate: site preview card + "⏳ Cloning started" email (with og:image)
 5. Pipeline runs on GitHub Actions (~5 min)
-6. ZIP + report uploaded **directly to Cloudflare R2** (up to 1 GB)
+6. ZIP + report uploaded **directly to Cloudflare R2** (max 250 MB)
 7. "🎉 Clone ready!" email with download links
+
+### Usage Tiers
+
+| Tier | Auth | Clones | Max ZIP |
+|------|------|--------|---------|
+| **Free** | Google | 1 total | 250 MB |
+| **Starred** | Google + GitHub + ⭐ star the repo | 5/day, 20/month | 250 MB (~5 GB/month) |
+| **Unlimited** | By request | ∞ | ∞ |
+
+- First clone is free with Google sign-in only
+- For more clones: sign in with GitHub and star [google-sites-clone](https://github.com/maximosovsky/google-sites-clone)
+- Unlimited tier is available by request for heavy users
 
 ### Download Links
 
-- **ZIP** — presigned URL (1h), file stored **7 days** in R2
-- **Report** — presigned URL, stored **360 days** in R2
-- **Preview image** — og:image proxied through R2 (7 days)
+- **ZIP** — presigned URL (1h), file auto-deleted after **7 days**
+- **Report** — presigned URL, auto-deleted after **360 days**
+- **Preview image** — og:image proxied through R2 (auto-deleted after 7 days)
+
+> R2 lifecycle rules handle cleanup automatically — no manual deletion needed.
 
 ---
 

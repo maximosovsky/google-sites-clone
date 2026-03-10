@@ -382,13 +382,35 @@
           else { img.style.display = 'none'; }
         } else {
           card.style.display = 'block';
-          card.style.background = '#fef2f2';
-          card.style.borderColor = '#ef4444';
-          document.getElementById('statusIcon').textContent = '❌';
-          document.getElementById('statusTitle').textContent = 'Error';
-          document.getElementById('statusSite').textContent = data.error || 'Unknown error';
-          document.getElementById('statusMsg').textContent = '';
+          card.style.background = '#fef7e0';
+          card.style.borderColor = '#ea8600';
           document.getElementById('statusPreview').style.display = 'none';
+
+          if (data.needsGithub) {
+            document.getElementById('statusIcon').textContent = '🔑';
+            document.getElementById('statusTitle').textContent = 'GitHub sign-in required';
+            document.getElementById('statusSite').textContent = 'You\'ve used your free clone. Sign in with GitHub to continue.';
+            document.getElementById('statusMsg').innerHTML = '<a href="/api/auth-github" style="display:inline-block;padding:8px 20px;background:#24292e;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px">Sign in with GitHub</a>';
+          } else if (data.needsStar) {
+            document.getElementById('statusIcon').textContent = '⭐';
+            document.getElementById('statusTitle').textContent = 'Star the repo to unlock cloning';
+            document.getElementById('statusSite').textContent = 'Star google-sites-clone on GitHub to unlock 5 clones/day.';
+            document.getElementById('statusMsg').innerHTML = '<a href="https://github.com/maximosovsky/google-sites-clone" target="_blank" rel="noopener" style="display:inline-block;padding:8px 20px;background:#2a9d5c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px">⭐ Star on GitHub</a>';
+          } else if (data.limitReached) {
+            document.getElementById('statusIcon').textContent = '⏳';
+            document.getElementById('statusTitle').textContent = 'Limit reached';
+            document.getElementById('statusSite').textContent = data.error;
+            document.getElementById('statusMsg').textContent = '📧 Check your email for upgrade options.';
+            card.style.background = '#fef2f2';
+            card.style.borderColor = '#ef4444';
+          } else {
+            document.getElementById('statusIcon').textContent = '❌';
+            document.getElementById('statusTitle').textContent = 'Error';
+            document.getElementById('statusSite').textContent = data.error || 'Unknown error';
+            document.getElementById('statusMsg').textContent = '';
+            card.style.background = '#fef2f2';
+            card.style.borderColor = '#ef4444';
+          }
         }
       } catch (e) {
         const card = document.getElementById('cloneStatus');

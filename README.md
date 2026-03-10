@@ -102,6 +102,16 @@ Pushes `site/` to the `gh-pages` branch. Enable Pages in repo Settings → Pages
 
 ---
 
+## 🎫 Usage Tiers
+
+| Tier | Auth | Clones | Max ZIP |
+|------|------|--------|---------|
+| **Free** | Google | 1 total | 250 MB |
+| **Starred** | Google + GitHub + ⭐ repo | 5/day, 20/month | 250 MB |
+| **Unlimited** | By request | ∞ | ∞ |
+
+---
+
 ## 💡 How It Works
 
 ```
@@ -111,7 +121,7 @@ URL → [1. Crawl]      → page-map.json (~2 KB)
     → [4. Images]      → site/images/ decoded files
     → [4b. Video]      → site/thumbnails/ (~50 KB each)
     → [5. Build]       → site/ iframe nav + video grid + report
-    → [6. ZIP]         → clone-result.zip (40–200 MB, up to 1 GB)
+    → [6. ZIP]         → clone-result.zip (40–250 MB)
     → [7. R2 Upload]   → Cloudflare R2 (direct via aws s3 cp)
     → [8. Email]       → "Clone ready!" + download links
 ```
@@ -124,8 +134,8 @@ URL → [1. Crawl]      → page-map.json (~2 KB)
 | 4 | Base64 decoder | `site/images/` | varies |
 | 4b | Video scanner | `site/thumbnails/` | ~50 KB each |
 | 5 | Build script | `site/` (nav + grid + report) | — |
-| 6 | ZIP | `clone-result.zip` | up to 1 GB |
-| 7 | AWS CLI | R2: `zips/` (7d), `reports/` (360d) | — |
+| 6 | ZIP | `clone-result.zip` | up to 250 MB |
+| 7 | AWS CLI | R2: `zips/` (7d auto-delete), `reports/` (360d auto-delete) | — |
 
 ---
 
@@ -196,9 +206,9 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 - [x] GitHub Pages deploy
 - [x] ZIP export
 - [x] npm publish
-- [x] Rate limits (max pages, cooldown)
+- [x] Rate limits + usage tiers (Free / Starred / Unlimited)
 - [x] Email delivery (Resend)
-- [x] Cloudflare R2 storage
+- [x] Cloudflare R2 storage + lifecycle auto-cleanup
 - [x] Real Google OAuth
 - [x] Real GitHub OAuth
 

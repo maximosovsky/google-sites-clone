@@ -84,3 +84,8 @@
 - [ ] Update `RESEND_FROM` to `clone@osovsky.com`
 - [ ] GitHub Pages auto-deploy from web UI (using stored OAuth token)
 - [ ] Custom domain `gsclone.osovsky.com` → Vercel
+- [x] R2 lifecycle rules (zips 7d, previews 7d, reports 360d)
+- [ ] Rate limit per user (Upstash Redis: Free 1 clone, Starred 5/day + 20/month)
+- [ ] GitHub star gate (require ⭐ for Starred tier)
+- [ ] 250 MB ZIP size limit
+- [ ] Unlimited tier email offer ($99/mo)

@@ -1,4 +1,6 @@
 import { getSessionFromReq } from './_session.js';
+import { getCloneCount, getDailyCount, getMonthlyCount } from './_redis.js';
+import { checkStarred } from './_ratelimit.js';
 
 export default async function handler(req, res) {
     const jwtSecret = process.env.JWT_SECRET;
@@ -11,8 +13,31 @@ export default async function handler(req, res) {
     // Strip tokens — never expose to frontend
     const safe = (u) => u ? { provider: u.provider, name: u.name, email: u.email, picture: u.picture } : null;
 
+    // Get rate limit info
+    const email = sessions.google?.email || sessions.github?.email || '';
+    let cloneCount = 0;
+    let dailyCount = 0;
+    let monthlyCount = 0;
+    let starred = false;
+
+    if (email) {
+        [cloneCount, dailyCount, monthlyCount] = await Promise.all([
+            getCloneCount(email),
+            getDailyCount(email),
+            getMonthlyCount(email),
+        ]);
+    }
+
+    if (sessions.github?.token) {
+        starred = await checkStarred(sessions.github.token);
+    }
+
     return res.status(200).json({
         google: safe(sessions.google),
         github: safe(sessions.github),
+        cloneCount,
+        dailyCount,
+        monthlyCount,
+        starred,
     });
 }

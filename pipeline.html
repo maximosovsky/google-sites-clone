@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Pipeline Architecture v2</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 22px;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 18px;
+            color: #555;
+            margin-top: 32px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+
+        .mermaid {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        code {
+            background: #e8e8e8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 2px;
+        }
+
+        .done {
+            background: #e6f4ea;
+            color: #137333;
+        }
+
+        .todo {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+
+        .partial {
+            background: #fef7e0;
+            color: #ea8600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            margin: 12px 0;
+        }
+
+        th {
+            background: #1a73e8;
+            color: #fff;
+            padding: 10px;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 8px 10px;
+            font-size: 13px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔨 Build Pipeline v2 — Full Picture</h1>
+
+    <div class="section">
+        <h2>📦 Complete Pipeline</h2>
+        <div class="mermaid">
+            graph TD
+            URL["🌐 Google Sites URL"] --> S1
+
+            subgraph "Step 1: Crawl"
+            S1["Puppeteer opens main page"] --> S1b["Parse sidebar treeitem links"]
+            S1b --> PM["📋 page-map.json<br />titles, urls, depth, files"]
+            end
+
+            subgraph "Step 2: SingleFile"
+            PM --> S2["SingleFile CLI per page"]
+            S2 --> SF["📦 _pages/<br />Full HTML + CSS + base64 images<br />NO navigation"]
+            end
+
+            subgraph "Step 3: Puppeteer"
+            PM --> S3["Puppeteer per page<br />scroll for lazy load"]
+            S3 --> PP["📄 _content/<br />Clean content + iframe src"]
+            end
+
+            subgraph "Step 4: Images"
+            SF --> S4["Decode base64 from SF"]
+            S4 --> IMG["🖼️ site/images/<br />46 local files"]
+            end
+
+            subgraph "Step 4b: Video — TODO"
+            PP --> S4v["Scan PP for YouTube/Vimeo/GDrive iframes"]
+            S4v --> VID_LIST["📺 video-map.json<br />page → video IDs + types"]
+            VID_LIST --> THUMB["Download YouTube thumbnails<br />maxresdefault.jpg"]
+            THUMB --> VID_IMG["🎬 site/thumbnails/<br />yt-VIDEOID.jpg"]
+            end
+
+            subgraph "Step 5: Build"
+            PM --> NAV["Generate sidebar nav"]
+            SF --> COPY["Copy SF pages as-is"]
+            IMG --> REWRITE["Rewrite base64 → local images<br />in SF pages"]
+            VID_LIST --> REPLACE["Replace iframe placeholders<br />with clickable thumbnails"]
+            VID_IMG --> REPLACE
+
+            NAV --> INDEX["index.html<br />sidebar + iframe"]
+            PM --> REPORT["📊 report.html<br />Site map + SF vs PP comparison"]
+            SF --> REPORT
+            PP --> REPORT
+            COPY --> SITE
+            REWRITE --> SITE
+            REPLACE --> SITE
+            INDEX --> SITE["📁 site/<br />index.html + report.html<br />+ 34 pages + images/ + thumbnails/<br />+
+            sitemap.xml + robots.txt"]
+            REPORT --> SITE
+            end
+
+            INDEX -. "footer link:<br />Built with google-sites-clone" .-> REPORT
+
+            style S4v fill:#fce8e6,color:#c5221f
+            style VID_LIST fill:#fce8e6,color:#c5221f
+            style THUMB fill:#fce8e6,color:#c5221f
+            style VID_IMG fill:#fce8e6,color:#c5221f
+            style REPLACE fill:#fce8e6,color:#c5221f
+            style REWRITE fill:#fef7e0,color:#ea8600
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📂 Folder Structure</h2>
+        <div class="mermaid">
+            graph LR
+            subgraph "clone-output/"
+            PM2["📋 page-map.json"]
+            subgraph "_pages/"
+            SF2["shematizatiy.html<br />lektoriy.html<br />... 32 files × 7MB<br /><i>SingleFile full HTML</i>"]
+            end
+            subgraph "_content/"
+            PP2["shematizatiy.html<br />lektoriy.html<br />... 34 files × 9KB<br /><i>Puppeteer clean content</i>"]
+            end
+            subgraph "site/"
+            IDX["index.html — sidebar + iframe"]
+            RPT["report.html — clone report"]
+            PAGES2["shematizatiy.html<br />... 34 SF copies"]
+            subgraph "images/"
+            IMGS["img-001.jpg ... img-046.jpg<br /><i>decoded from base64</i>"]
+            end
+            subgraph "thumbnails/"
+            THUMBS["yt-VIDEO_ID.jpg<br /><i>downloaded from YouTube</i>"]
+            end
+            SMAP["sitemap.xml + robots.txt"]
+            end
+            end
+
+            style SF2 fill:#e8f0fe
+            style PP2 fill:#fef7e0
+            style IDX fill:#e6f4ea
+            style RPT fill:#e6f4ea
+            style THUMBS fill:#fce8e6
+        </div>
+    </div>
+    <div class="section">
+        <h2>📊 Step Status</h2>
+        <table>
+            <tr>
+                <th>Step</th>
+                <th>Script</th>
+                <th>Status</th>
+                <th>What it does</th>
+            </tr>
+            <tr>
+                <td>1. Crawl</td>
+                <td><code>lib/crawl.js</code></td>
+                <td><span class="badge done">✅ Done</span></td>
+                <td>Discovers pages from sidebar → page-map.json</td>
+            </tr>
+            <tr>
+                <td>2. SingleFile</td>
+                <td><code>lib/singlefile.js</code></td>
+                <td><span class="badge done">✅ Done</span></td>
+                <td>Downloads full HTML with CSS + base64 images</td>
+            </tr>
+            <tr>
+                <td>3. Puppeteer</td>
+                <td><code>lib/puppeteer.js</code></td>
+                <td><span class="badge done">✅ Done</span></td>
+                <td>Extracts clean content + iframe sources</td>
+            </tr>
+            <tr>
+                <td>4. Images</td>
+                <td><code>lib/images.js</code></td>
+                <td><span class="badge partial">⚠️ Partial</span></td>
+                <td>Decodes base64 → local files. Doesn't rewrite URLs in SF pages yet</td>
+            </tr>
+            <tr>
+                <td>4b. Video</td>
+                <td><code>lib/video.js</code></td>
+                <td><span class="badge done">✅ Done</span></td>
+                <td>Scan PP for iframes → download YT thumbnails → replace in SF pages</td>
+            </tr>
+            <tr>
+                <td>5. Build</td>
+                <td><code>lib/build.js</code></td>
+                <td><span class="badge done">✅ Done</span></td>
+                <td>Copies SF as-is + index.html with iframe nav + video grid + report link</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>📺 Step 4b: Video Processing — Proposed</h2>
+        <div class="mermaid">
+            graph LR
+            PP["_content/ Puppeteer HTML"] --> SCAN["Scan for iframe patterns"]
+            SCAN --> YT["YouTube<br />youtube.com/embed/ID"]
+            SCAN --> VM["Vimeo<br />player.vimeo.com/video/ID"]
+            SCAN --> GD["Google Drive<br />drive.google.com/file/ID"]
+
+            YT --> DL_YT["Download 1280×720<br />img.youtube.com/vi/ID/maxresdefault.jpg<br />fallback: hqdefault.jpg
+            480×360"]
+            DL_YT["Download 1280×720<br />img.youtube.com/vi/ID/maxresdefault.jpg<br />fallback: hqdefault.jpg 480×360"]
+            VM --> DL_VM["Download<br />vumbnail.com/ID.jpg"]
+            GD --> SKIP["No thumbnail available"]
+
+            DL_YT --> STORE["site/thumbnails/"]
+            DL_VM --> STORE
+
+            STORE --> BUILD["Build: replace iframes in SF HTML<br />with clickable thumbnail + play button"]
+        </div>
+
+        <h3>Input: Puppeteer HTML contains</h3>
+        <pre>
+&lt;div data-iframe-src="https://www.youtube.com/embed/VIDEO_ID"&gt;&lt;/div&gt;
+</pre>
+
+        <h3>Output: SingleFile HTML gets</h3>
+        <pre>
+&lt;a href="https://youtube.com/watch?v=VIDEO_ID" target="_blank"&gt;
+  &lt;img src="thumbnails/yt-VIDEO_ID.jpg" alt="YouTube"&gt;
+  &lt;span class="play-btn"&gt;▶&lt;/span&gt;
+&lt;/a&gt;
+</pre>
+    </div>
+
+    <div class="section">
+        <h2>🔧 Files to Create/Modify</h2>
+        <table>
+            <tr>
+                <th>File</th>
+                <th>Action</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td><code>lib/video.js</code></td>
+                <td><span class="badge todo">NEW</span></td>
+                <td>Scan _content/ for video iframes, download thumbnails, create video-map.json</td>
+            </tr>
+            <tr>
+                <td><code>lib/build.js</code></td>
+                <td><span class="badge partial">MODIFY</span></td>
+                <td>Replace iframe placeholders in SF HTML with downloaded thumbnails</td>
+            </tr>
+            <tr>
+                <td><code>lib/index.js</code></td>
+                <td><span class="badge partial">MODIFY</span></td>
+                <td>Add Step 4b call between images and build</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🎫 Usage Tiers</h2>
+        <table>
+            <tr>
+                <th>Tier</th>
+                <th>Auth</th>
+                <th>Clones</th>
+                <th>Max ZIP</th>
+            </tr>
+            <tr>
+                <td><strong>Free</strong></td>
+                <td>Google OAuth</td>
+                <td>1 total</td>
+                <td>250 MB</td>
+            </tr>
+            <tr>
+                <td><strong>Starred</strong></td>
+                <td>Google + GitHub + ⭐ repo</td>
+                <td>5/day, 20/month</td>
+                <td>250 MB (~5 GB/month)</td>
+            </tr>
+            <tr>
+                <td><strong>Unlimited</strong></td>
+                <td>Email offer only</td>
+                <td>∞</td>
+                <td>∞ ($99/month)</td>
+            </tr>
+        </table>
+        <p>Clone count tracked in <strong>Upstash Redis</strong>. Star check via GitHub API. Unlimited offered via email
+            when Starred user exhausts monthly limit.</p>
+    </div>
+
+    <div class="section">
+        <h2>☁️ R2 Lifecycle Rules (auto-cleanup)</h2>
+        <table>
+            <tr>
+                <th>Prefix</th>
+                <th>Auto-delete after</th>
+            </tr>
+            <tr>
+                <td><code>zips/</code></td>
+                <td>7 days</td>
+            </tr>
+            <tr>
+                <td><code>previews/</code></td>
+                <td>7 days</td>
+            </tr>
+            <tr>
+                <td><code>reports/</code></td>
+                <td>360 days</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+
+</html>

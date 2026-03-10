@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import { getSessionFromReq } from './_session.js';
 import { sendEmail } from './_email.js';
 import { uploadToR2 } from './_r2.js';
+import { checkRateLimit } from './_ratelimit.js';
+import { incrementCloneCount } from './_redis.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -25,8 +27,9 @@ export default async function handler(req, res) {
     let ghToken = '';
     let ghUser = '';
     let authenticated = false;
+    let sessions = { google: null, github: null };
     if (jwtSecret) {
-        const sessions = getSessionFromReq(req, jwtSecret);
+        sessions = getSessionFromReq(req, jwtSecret);
         if (sessions.google) {
             authenticated = true;
             if (!email) email = sessions.google.email || '';
@@ -83,6 +86,38 @@ export default async function handler(req, res) {
         }
     } catch { /* ignore preview errors */ }
 
+    // Rate limit check
+    const rateLimit = await checkRateLimit(sessions, estimatedZipMB);
+    if (!rateLimit.allowed) {
+        // Send Unlimited offer email when Starred user exhausts limits
+        if (rateLimit.limitReached && email) {
+            try {
+                await sendEmail({
+                    to: email,
+                    subject: `\u{1F680} Unlock unlimited cloning`,
+                    html: `
+                        <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+                            <h2 style="color:#1a1a2e">You've reached your clone limit \u{1F4CA}</h2>
+                            <p>You've used <strong>${rateLimit.monthlyCount}</strong> clones this month (limit: 20/month).</p>
+                            <p>Need more? <strong>Unlimited cloning</strong> is available for <strong>$99/month</strong> \u2014 no limits on clones or file size.</p>
+                            <p>Reply to this email to get started.</p>
+                            <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+                            <p style="font-size:12px;color:#999">
+                                <a href="https://gsclone.osovsky.com" style="color:#999">gsclone.osovsky.com</a>
+                            </p>
+                        </div>
+                    `,
+                });
+            } catch { /* email is best-effort */ }
+        }
+        return res.status(403).json({
+            error: rateLimit.reason,
+            needsGithub: rateLimit.needsGithub,
+            needsStar: rateLimit.needsStar,
+            limitReached: rateLimit.limitReached,
+        });
+    }
+
     try {
         const response = await fetch(
             'https://api.github.com/repos/maximosovsky/google-sites-clone/actions/workflows/clone.yml/dispatches',
@@ -109,6 +144,9 @@ export default async function handler(req, res) {
 
         if (response.status === 204) {
             const previewImg = ogImageR2 || ogImage;
+
+            // Increment clone counter
+            await incrementCloneCount(email);
 
             // Send immediate "processing started" email
             if (email) {
