@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="cover.jpg" alt="Google Sites Clone" width="200">
+<img src="https://raw.githubusercontent.com/maximosovsky/google-sites-clone/main/cover.jpg" alt="Google Sites Clone" width="200">
 
 # 🌐 Google Sites Clone
 
@@ -79,6 +79,8 @@ gsclone <url> [options]
 
 Options:
   -o, --output <dir>   Output directory (default: ./clone)
+  --max-pages <n>      Limit number of pages to clone
+  --cooldown <ms>      Pause between page loads in ms (default: 1000)
   --no-images          Skip image localization
   --no-youtube         Skip YouTube thumbnail download
   --serve              Start local server after build
