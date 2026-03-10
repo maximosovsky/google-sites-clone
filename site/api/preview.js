@@ -7,15 +7,15 @@ export default async function handler(req, res) {
     try {
         const response = await fetch(url, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; gsclone/1.0)' },
+            redirect: 'follow',
         });
         const html = await response.text();
 
         const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        const ogMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i)
-            || html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:image"/i);
+        const ogMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
 
         return res.status(200).json({
-            title: titleMatch ? titleMatch[1].trim() : '',
+            title: titleMatch ? titleMatch[1].replace(/ - Google Sites$/, '').trim() : '',
             ogImage: ogMatch ? ogMatch[1] : '',
         });
     } catch {
