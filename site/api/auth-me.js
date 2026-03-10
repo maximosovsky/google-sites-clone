@@ -21,19 +21,21 @@ export default async function handler(req, res) {
     let starred = false;
 
     if (email) {
-        [cloneCount, dailyCount, monthlyCount] = await Promise.all([
-            getCloneCount(email),
-            getDailyCount(email),
-            getMonthlyCount(email),
-        ]);
+        try {
+            [cloneCount, dailyCount, monthlyCount] = await Promise.all([
+                getCloneCount(email),
+                getDailyCount(email),
+                getMonthlyCount(email),
+            ]);
 
-        // Check cached star first, then live GitHub API
-        const cachedStar = await getStarredInfo(email);
-        if (cachedStar) {
-            starred = true;
-        } else if (sessions.github?.token) {
-            starred = await checkStarred(sessions.github.token);
-        }
+            // Check cached star first, then live GitHub API
+            const cachedStar = await getStarredInfo(email);
+            if (cachedStar) {
+                starred = true;
+            } else if (sessions.github?.token) {
+                starred = await checkStarred(sessions.github.token);
+            }
+        } catch { /* Redis unavailable — continue with defaults */ }
     }
 
     return res.status(200).json({
