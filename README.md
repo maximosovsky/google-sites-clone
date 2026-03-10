@@ -215,7 +215,8 @@ google-sites-clone/
 │   ├── build.js            # iframe nav + page assembly
 │   ├── report.js           # Clone report dashboard
 │   ├── deploy.js           # GitHub Pages deploy
-│   └── zip.js              # ZIP archive creation
+│   ├── zip.js              # ZIP archive creation
+│   └── error-reporter.js   # R2 error logs + Resend email
 ├── rebuild.js              # Quick rebuild from cache
 ├── site/                   # Landing page (Vercel)
 │   ├── index.html          # Landing page + auth UI
@@ -224,14 +225,19 @@ google-sites-clone/
 │   └── api/
 │       ├── _session.js     # HMAC session helper
 │       ├── _r2.js          # Cloudflare R2 helper
+│       ├── _redis.js       # Upstash Redis helper
+│       ├── _ratelimit.js   # Usage tier rate limiting
 │       ├── _email.js       # Resend email helper
 │       ├── auth-google.js  # Google OAuth redirect
+│       ├── auth-google-callback.js
 │       ├── auth-github.js  # GitHub OAuth redirect
+│       ├── auth-github-callback.js
 │       ├── auth-me.js      # Get current user
 │       ├── auth-logout.js  # Clear session
 │       ├── clone.js        # Trigger clone pipeline
 │       ├── upload.js       # Webhook: R2 upload + email
-│       └── download.js     # Presigned R2 download
+│       ├── download.js     # Presigned R2 download
+│       └── preview.js      # Clone preview
 ├── ARCHITECTURE.md
 ├── MANUAL.md
 ├── ROADMAP.md
