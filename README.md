@@ -45,11 +45,19 @@ Google Sites stores your content behind an SPA that search engines can't index a
 
 ## 🚀 Quick Start
 
+### 🌐 Web (no install)
+
+Clone any Google Site at [**gsclone.osovsky.com**](https://gsclone.osovsky.com) — sign in with Google, paste URL, get ZIP by email.
+
+### 💻 CLI (developers)
+
+> **Requires:** Node.js 18+, Chrome/Chromium. SingleFile CLI is auto-installed on first run (~30 MB).
+
 ```bash
 npx google-sites-clone https://sites.google.com/view/your-site
 ```
 
-📦 [View on npm](https://www.npmjs.com/package/google-sites-clone)
+📦 [View on npm](https://www.npmjs.com/package/google-sites-clone) · Installs: Puppeteer (~400 MB) + SingleFile CLI (~30 MB)
 
 <details>
 <summary>📋 Manual setup</summary>
@@ -97,22 +105,27 @@ Pushes `site/` to the `gh-pages` branch. Enable Pages in repo Settings → Pages
 ## 💡 How It Works
 
 ```
-URL → [1. Crawl]      → page-map.json (all pages + structure)
-    → [2. SingleFile]  → _pages/ CSS + base64 images (visual fidelity)
-    → [3. Puppeteer]   → _content/ Clean content + iframe sources
-    → [4. Images]      → site/images/ base64 → local files
-    → [4b. Video]      → site/thumbnails/ YouTube/Vimeo thumbs
-    → [5. Build]       → site/ iframe nav + pages + video grid + report
+URL → [1. Crawl]      → page-map.json (~2 KB)
+    → [2. SingleFile]  → _pages/ CSS + base64 (~7 MB/page)
+    → [3. Puppeteer]   → _content/ clean content (~9 KB/page)
+    → [4. Images]      → site/images/ decoded files
+    → [4b. Video]      → site/thumbnails/ (~50 KB each)
+    → [5. Build]       → site/ iframe nav + video grid + report
+    → [6. ZIP]         → clone-result.zip (40–200 MB, up to 1 GB)
+    → [7. R2 Upload]   → Cloudflare R2 (direct via aws s3 cp)
+    → [8. Email]       → "Clone ready!" + download links
 ```
 
-| Pass | Tool | Captures |
-|------|------|----------|
-| 1 | Puppeteer | Navigation structure → `page-map.json` |
-| 2 | SingleFile CLI | CSS, base64 images, layout → `_pages/` |
-| 3 | Puppeteer (batch ×5) | Clean text, links, iframe srcs → `_content/` |
-| 4 | Base64 decoder | Images from SingleFile → `site/images/` |
-| 4b | Video scanner | YouTube/Vimeo thumbnails → `site/thumbnails/` |
-| 5 | Build script | iframe nav + video grid + report + sitemap → `site/` |
+| Pass | Tool | Output | Size |
+|------|------|--------|------|
+| 1 | Puppeteer | `page-map.json` | ~2 KB |
+| 2 | SingleFile CLI | `_pages/*.html` | ~7 MB/page |
+| 3 | Puppeteer ×5 | `_content/*.html` | ~9 KB/page |
+| 4 | Base64 decoder | `site/images/` | varies |
+| 4b | Video scanner | `site/thumbnails/` | ~50 KB each |
+| 5 | Build script | `site/` (nav + grid + report) | — |
+| 6 | ZIP | `clone-result.zip` | up to 1 GB |
+| 7 | AWS CLI | R2: `zips/` (7d), `reports/` (360d) | — |
 
 ---
 

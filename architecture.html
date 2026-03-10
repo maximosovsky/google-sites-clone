@@ -1,155 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>google-sites-clone — Architecture</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; color: #333; padding: 40px; max-width: 1100px; margin: 0 auto; }
-    h1 { font-size: 28px; margin-bottom: 8px; }
-    h2 { font-size: 22px; margin-top: 40px; color: #555; }
-    .mermaid { background: #fff; border-radius: 12px; padding: 24px; margin: 16px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    table { border-collapse: collapse; width: 100%; margin: 16px 0; }
-    th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; font-size: 14px; }
-    th { background: #f0f0f5; font-weight: 600; }
-    code { background: #eef0ff; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-    hr { border: none; border-top: 1px solid #ddd; margin: 32px 0; }
-  </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>google-sites-clone — Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            padding: 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-top: 40px;
+            color: #555;
+        }
+
+        .mermaid {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f0f0f5;
+            font-weight: 600;
+        }
+
+        code {
+            background: #eef0ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 32px 0;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>google-sites-clone — Architecture</h1>
+    <h1>google-sites-clone — Architecture</h1>
 
-<h2>CLI Pipeline</h2>
-<div class="mermaid">
-flowchart LR
-    URL["gsclone URL"] --> C["crawl.js"]
-    C -->|page-map.json| SF["singlefile.js"]
-    C -->|page-map.json| PP["puppeteer.js"]
-    SF -->|"pages/*.html<br>(CSS + base64)"| IMG["images.js"]
-    PP -->|"content/*.html<br>(clean text)"| IMG
-    PP -->|"failed pages"| SPA["SPA fallback"]
-    SPA --> PP
-    IMG -->|"images/*<br>(local files)"| B["build.js"]
-    SF --> B
-    PP --> B
-    B -->|"site/"| OUT["index.html<br>sitemap.xml<br>robots.txt"]
-</div>
+    <h2>CLI Pipeline</h2>
+    <div class="mermaid">
+        flowchart LR
+        URL["gsclone URL"] --> C["crawl.js"]
+        C -->|"page-map.json<br>(~2 KB)"| SF["singlefile.js"]
+        C -->|"page-map.json"| PP["puppeteer.js"]
+        SF -->|"_pages/*.html<br>(~7 MB/page)"| IMG["images.js"]
+        PP -->|"_content/*.html<br>(~9 KB/page)"| IMG
+        PP -->|"failed pages"| SPA["SPA fallback"]
+        SPA --> PP
+        IMG -->|"images/*<br>(local files)"| B["build.js"]
+        PP -->|"video-map"| VID["video.js"]
+        VID -->|"thumbnails/<br>(~50 KB each)"| B
+        SF --> B
+        PP --> B
+        C -->|"page-map.json"| RPT["report.js"]
+        SF --> RPT
+        PP --> RPT
+        B -->|"site/"| OUT["index.html<br>report.html<br>sitemap.xml<br>robots.txt"]
+    </div>
 
-<table>
-  <tr><th>Module</th><th>Input</th><th>Output</th></tr>
-  <tr><td><code>crawl.js</code></td><td>URL</td><td><code>page-map.json</code> (pages + hierarchy)</td></tr>
-  <tr><td><code>singlefile.js</code></td><td>page-map</td><td><code>pages/*.html</code> (CSS + base64 images)</td></tr>
-  <tr><td><code>puppeteer.js</code></td><td>page-map</td><td><code>content/*.html</code> (clean text + iframes)</td></tr>
-  <tr><td><code>images.js</code></td><td>pages/ + content/</td><td><code>images/*</code> (decoded files) + updated URLs</td></tr>
-  <tr><td><code>build.js</code></td><td>all above</td><td><code>site/</code> (final HTML + sitemap + robots.txt)</td></tr>
-</table>
+    <table>
+        <tr>
+            <th>Module</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Size</th>
+        </tr>
+        <tr>
+            <td><code>crawl.js</code></td>
+            <td>URL</td>
+            <td><code>page-map.json</code></td>
+            <td>~2 KB</td>
+        </tr>
+        <tr>
+            <td><code>singlefile.js</code></td>
+            <td>page-map</td>
+            <td><code>_pages/*.html</code></td>
+            <td>~7 MB/page</td>
+        </tr>
+        <tr>
+            <td><code>puppeteer.js</code></td>
+            <td>page-map</td>
+            <td><code>_content/*.html</code></td>
+            <td>~9 KB/page</td>
+        </tr>
+        <tr>
+            <td><code>images.js</code></td>
+            <td>_pages/ + _content/</td>
+            <td><code>images/*</code></td>
+            <td>varies</td>
+        </tr>
+        <tr>
+            <td><code>video.js</code></td>
+            <td>_content/</td>
+            <td><code>thumbnails/*</code></td>
+            <td>~50 KB each</td>
+        </tr>
+        <tr>
+            <td><code>build.js</code></td>
+            <td>all above</td>
+            <td><code>site/</code></td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><code>report.js</code></td>
+            <td>page-map + passes</td>
+            <td><code>report.html</code></td>
+            <td>~50 KB</td>
+        </tr>
+    </table>
 
-<hr>
+    <hr>
 
-<h2>Product Architecture</h2>
-<div class="mermaid">
-flowchart TB
-    subgraph USER["👤 User"]
+    <h2>Product Architecture</h2>
+    <div class="mermaid">
+        flowchart TB
+        subgraph USER["👤 User"]
         A["Paste Google Sites URL"]
-    end
-    subgraph FRONTEND["🌐 Vercel — gsclone.osovsky.com"]
+        end
+        subgraph FRONTEND["🌐 Vercel"]
         B["Landing Page"]
         C{"Auth?"}
         D["Preview Only"]
         E["Google OAuth"]
-        F["GitHub OAuth"]
-        Q["Queue Status"]
-    end
-    subgraph BACKEND["⚙️ GitHub Actions"]
-        G["Auto-crawl Navigation"]
-        H["page-map.json"]
+        F["GitHub OAuth (repo)"]
+        Q["Clone triggered"]
+        EM1["📧 Cloning started email"]
+        PRV["og:image → R2"]
+        end
+        subgraph BACKEND["⚙️ GitHub Actions (ubuntu)"]
+        G["Auto-crawl"]
+        H["page-map.json (~2 KB)"]
         subgraph PASS1["Pass 1: SingleFile"]
-            I["CSS + base64 images"]
+        I["CSS + base64 (~7 MB/page)"]
         end
-        subgraph PASS2["Pass 2: Puppeteer batch ×5"]
-            J["Clean content + iframe srcs"]
-            J2["SPA navigation fallback"]
+        subgraph PASS2["Pass 2: Puppeteer ×5"]
+        J["Clean content (~9 KB/page)"]
+        J2["SPA fallback"]
         end
-        K["Merge"]
-        L["YouTube Thumbnails"]
-        M["sitemap.xml + robots.txt"]
-        N["ZIP"]
-    end
-    subgraph STORAGE["☁️ Cloudflare R2"]
-        O["ZIP (7 days)"]
-        P["Report /r/id (360 days)"]
-    end
-    subgraph DELIVERY["📬 Delivery"]
+        K["Merge + Images"]
+        L["Video thumbs (~50 KB)"]
+        M["sitemap + robots"]
+        N["ZIP (~40–200 MB, up to 1 GB)"]
+        R2UP["aws s3 cp → R2 (direct)"]
+        WH["POST /api/upload<br>(metadata only)"]
+        end
+        subgraph STORAGE["☁️ Cloudflare R2"]
+        O["zips/ID.zip (7d)"]
+        P["reports/ID.html (360d)"]
+        PRVS["previews/ID.png (7d)"]
+        end
+        subgraph DELIVERY["📬 Delivery"]
         R["Email via Resend"]
         S["GitHub Pages"]
-    end
-    A --> B
-    B --> C
-    C -->|None| D
-    C -->|Google| E --> Q --> G
-    C -->|GitHub| F
-    G --> H
-    H --> I
-    H --> J
-    J -->|failed| J2
-    I --> K
-    J --> K
-    J2 --> K
-    K --> L --> N
-    K --> M
-    N --> O --> P
-    N --> R
-    F -->|checkbox| S
-    R -->|"ZIP + report link"| USER
-    S -->|"username.github.io/clone"| USER
-</div>
+        end
+        A --> B
+        B --> C
+        C -->|None| D
+        C -->|Google| E --> Q --> G
+        C -->|GitHub| F
+        Q --> PRV --> PRVS
+        Q --> EM1
+        G --> H
+        H --> I
+        H --> J
+        J -->|failed| J2
+        I --> K
+        J --> K
+        J2 --> K
+        K --> L --> N
+        K --> M
+        N -->|"direct upload"| R2UP
+        R2UP --> O
+        R2UP --> P
+        R2UP --> WH
+        WH --> R
+        F -->|"deploy"| S
+        R -->|"ZIP + report links"| USER
+        S -->|"username.github.io"| USER
+    </div>
 
-<hr>
+    <hr>
 
-<h2>Sequence Diagram</h2>
-<div class="mermaid">
-sequenceDiagram
-    participant U as 👤 User
-    participant V as 🌐 Vercel
-    participant GA as 🔑 Google Auth
-    participant GH as 🔑 GitHub Auth
-    participant CI as ⚙️ GitHub Actions
-    participant R2 as ☁️ Cloudflare R2
-    participant EM as 📬 Resend
-    participant GP as 📄 GitHub Pages
-    U->>V: Paste URL
-    V->>U: Preview (no login)
-    U->>GA: Login with Google
-    GA->>V: Email + token
-    opt GitHub Pages wanted
-        U->>GH: Connect GitHub
-        GH->>V: GitHub token
-    end
-    U->>V: Click "Clone"
-    V->>CI: Trigger (URL, email, tokens)
-    V->>U: "Check email in ~20 min"
-    CI->>CI: Crawl nav → page-map.json
-    CI->>CI: Pass 1 SingleFile
-    CI->>CI: Pass 2 Puppeteer batch
-    CI->>CI: SPA fallback for failed pages
-    CI->>CI: Merge + ZIP
-    CI->>R2: Upload ZIP (7d TTL)
-    CI->>R2: Save report (360d TTL)
-    CI->>EM: Send email
-    opt GitHub Pages
+    <h2>Sequence Diagram</h2>
+    <div class="mermaid">
+        sequenceDiagram
+        participant U as 👤 User
+        participant V as 🌐 Vercel
+        participant GA as 🔑 Google Auth
+        participant GH as 🔑 GitHub Auth
+        participant CI as ⚙️ GitHub Actions
+        participant R2 as ☁️ Cloudflare R2
+        participant EM as 📬 Resend
+        participant GP as 📄 GitHub Pages
+
+        U->>V: Paste URL + Click Clone
+        V->>R2: Upload og:image preview (~100 KB)
+        V->>EM: "⏳ Cloning started" email (with preview)
+        V->>CI: workflow_dispatch (URL, email, secrets)
+        V->>U: Show status card + preview
+
+        CI->>CI: Crawl nav → page-map.json (~2 KB)
+        CI->>CI: Pass 1 SingleFile (~7 MB/page)
+        CI->>CI: Pass 2 Puppeteer batch ×5 (~9 KB/page)
+        CI->>CI: SPA fallback for failed pages
+        CI->>CI: Video thumbnails (~50 KB each)
+        CI->>CI: Merge + ZIP (~40–200 MB)
+
+        CI->>R2: aws s3 cp ZIP (up to 1 GB)
+        CI->>R2: aws s3 cp report.html (~50 KB)
+        CI->>V: POST /api/upload {id, email, siteUrl}
+        V->>EM: "🎉 Clone ready!" email
+
+        opt GitHub Pages
         CI->>GP: Create repo + push HTML
-        GP-->>U: Live at username.github.io/clone
-    end
-    EM->>U: "Clone ready!" + links
-    U->>R2: Download ZIP
-    U->>R2: View /r/abc123
-</div>
+        GP-->>U: Live at username.github.io
+        end
 
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad: true, theme: 'default' });
-</script>
+        EM->>U: Email with download links
+        U->>R2: Download ZIP (presigned URL)
+        U->>R2: View report (presigned URL)
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
 
 </body>
+
 </html>

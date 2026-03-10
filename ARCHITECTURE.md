@@ -54,8 +54,8 @@ site/api/
 ├── auth-github-callback.js ← Exchange code → set session cookie
 ├── auth-me.js             ← GET current user from cookie
 ├── auth-logout.js         ← Clear session cookie
-├── clone.js               ← POST → trigger GitHub Actions + email
-├── upload.js              ← POST webhook → R2 upload + send email
+├── clone.js               ← POST → fetch preview + trigger Actions + email
+├── upload.js              ← POST webhook → send "ready" email
 └── download.js            ← GET → presigned R2 download URL
 ```
 
@@ -67,9 +67,9 @@ site/api/
 | `/api/auth-github-callback` | GET | — | Exchange code, set cookie |
 | `/api/auth-me` | GET | Cookie | Return current user |
 | `/api/auth-logout` | GET | — | Clear session, redirect |
-| `/api/clone` | POST | Optional | Trigger clone pipeline |
-| `/api/upload` | POST | WEBHOOK_SECRET | Receive ZIP + report → R2 + email |
-| `/api/download` | GET | — | Redirect to presigned R2 URL |
+| `/api/clone` | POST | Optional | Fetch preview → trigger Actions → send "started" email |
+| `/api/upload` | POST | WEBHOOK_SECRET | Receive metadata → send "ready" email with download links |
+| `/api/download` | GET | — | Redirect to presigned R2 URL (ZIP/report/preview) |
 
 ---
 
@@ -173,40 +173,40 @@ flowchart TB
 
     subgraph AUTH["🔐 OAuth"]
         GA["Google OAuth 2.0"]
-        GHA["GitHub OAuth"]
-        SESS["HMAC Session Cookie"]
+        GHA["GitHub OAuth (repo scope)"]
+        SESS["HMAC Session Cookie (30d)"]
     end
 
-    subgraph FRONTEND["🌐 Vercel — gsclone.osovsky.com"]
+    subgraph FRONTEND["🌐 Vercel"]
         B["Landing Page"]
         C{"Auth?"}
         D["Preview Only"]
-        Q["Queue Status"]
+        Q["Clone triggered"]
+        EM1["📧 Cloning started email"]
     end
 
-    subgraph BACKEND["⚙️ GitHub Actions"]
+    subgraph BACKEND["⚙️ GitHub Actions (ubuntu)"]
         G["Auto-crawl Navigation"]
-        H["page-map.json"]
-
+        H["page-map.json (~2 KB)"]
         subgraph PASS1["Pass 1: SingleFile"]
-            I["CSS + base64 images"]
+            I["CSS + base64 (~7 MB/page)"]
         end
-
-        subgraph PASS2["Pass 2: Puppeteer batch x5"]
-            J["Clean content + iframe srcs"]
-            J2["SPA navigation fallback"]
+        subgraph PASS2["Pass 2: Puppeteer ×5"]
+            J["Clean content (~9 KB/page)"]
+            J2["SPA fallback"]
         end
-
-        K["Merge"]
-        L["YouTube Thumbnails"]
+        K["Merge + Images"]
+        L["Video thumbnails (~50 KB each)"]
         M["sitemap.xml + robots.txt"]
-        N["ZIP + Report"]
-        WH["POST /api/upload"]
+        N["ZIP (~40–200 MB)"]
+        R2UP["aws s3 cp → R2"]
+        WH["POST /api/upload (metadata only)"]
     end
 
-    subgraph STORAGE["☁️ Cloudflare R2"]
-        O["ZIP (7 days)"]
-        P["Report (360 days)"]
+    subgraph STORAGE["☁️ Cloudflare R2 (up to 1 GB)"]
+        O["zips/ID.zip (7 days)"]
+        P["reports/ID.html (360 days)"]
+        PRV["previews/ID.png (7 days)"]
     end
 
     subgraph DELIVERY["📬 Delivery"]
@@ -220,7 +220,8 @@ flowchart TB
     C -->|Google| GA --> SESS --> Q
     C -->|GitHub| GHA --> SESS
 
-    Q --> G
+    Q --> EM1
+    Q -->|workflow_dispatch| G
     G --> H
     H --> I
     H --> J
@@ -231,13 +232,14 @@ flowchart TB
     K --> L --> N
     K --> M
 
-    N --> WH
-    WH --> O
-    WH --> P
+    N -->|"direct upload"| R2UP
+    R2UP --> O
+    R2UP --> P
+    R2UP --> WH
     WH --> R
 
     R -->|"ZIP + report link"| USER
-    S -->|"username.github.io/clone"| USER
+    S -->|"username.github.io"| USER
 ```
 
 ### Auth Flow
@@ -250,10 +252,23 @@ flowchart TB
 
 ### Storage + Email Flow
 
-1. GitHub Actions completes clone → POSTs ZIP (base64) + report HTML to `/api/upload`
-2. Upload handler stores ZIP in R2 (`zips/{id}.zip`, TTL 7d) and report (`reports/{id}.html`, TTL 360d)
-3. Sends email via Resend with presigned download links
-4. `/api/download?id=xxx&type=zip` redirects to presigned R2 URL
+1. `/api/clone` fetches og:image → uploads preview to R2 → sends "⏳ Cloning started" email
+2. GitHub Actions runs pipeline → uploads ZIP + report **directly to R2** via `aws s3 cp` (supports up to 1 GB)
+3. Actions sends lightweight webhook `{id, email, siteUrl}` to `/api/upload`
+4. Upload handler sends "🎉 Clone ready" email with presigned download links
+5. `/api/download?id=xxx&type=zip` redirects to presigned R2 URL
+
+### File Size Reference
+
+| Artifact | Typical Size | Storage |
+|----------|--------------|---------|
+| `page-map.json` | ~2 KB | Actions artifact |
+| `_pages/*.html` (SingleFile) | ~7 MB/page | Actions artifact |
+| `_content/*.html` (Puppeteer) | ~9 KB/page | Actions artifact |
+| `thumbnails/*.jpg` | ~50 KB each | Actions artifact |
+| Final ZIP | 40–200 MB (up to 1 GB) | R2 (7 days) |
+| `report.html` | ~50 KB | R2 (360 days) |
+| og:image preview | ~100 KB | R2 (7 days) |
 
 ### Environment Variables
 

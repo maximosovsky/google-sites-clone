@@ -31,6 +31,21 @@ program
             process.exit(1);
         }
 
+        // Auto-install SingleFile CLI if missing
+        const { execSync } = require('child_process');
+        try {
+            execSync('single-file --help', { stdio: 'ignore' });
+        } catch {
+            console.log('📦 SingleFile CLI not found — installing...');
+            try {
+                execSync('npm install -g single-file-cli', { stdio: 'inherit' });
+                console.log('✅ SingleFile CLI installed\n');
+            } catch (e) {
+                console.error('❌ Failed to install SingleFile CLI. Run manually: npm install -g single-file-cli');
+                process.exit(1);
+            }
+        }
+
         try {
             const siteDir = await clone(url, {
                 output: options.output,

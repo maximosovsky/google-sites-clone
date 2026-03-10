@@ -69,15 +69,18 @@ Pushes `site/` to the `gh-pages` branch. Enable GitHub Pages in repo Settings �
 
 ## Pipeline Steps
 
-| Step | What happens |
-|------|-------------|
-| 1. Crawl | Opens the site, parses sidebar → `page-map.json` |
-| 2. SingleFile | Full visual snapshot of each page → `_pages/` |
-| 3. Puppeteer | Clean content + iframe sources → `_content/` |
-| 4. Images | Base64 images → local files in `site/images/` |
-| 4b. Video | YouTube/Vimeo thumbnails → `site/thumbnails/` |
-| 5. Build | Sidebar nav + iframe + video grid → `site/` |
-| 6. Report | Quality dashboard → `report.html` |
+| Step | What happens | Size |
+|------|-------------|------|
+| 1. Crawl | Opens the site, parses sidebar → `page-map.json` | ~2 KB |
+| 2. SingleFile | Full visual snapshot of each page → `_pages/` | ~7 MB/page |
+| 3. Puppeteer | Clean content + iframe sources → `_content/` | ~9 KB/page |
+| 4. Images | Base64 images → local files in `site/images/` | varies |
+| 4b. Video | YouTube/Vimeo thumbnails → `site/thumbnails/` | ~50 KB each |
+| 5. Build | Sidebar nav + iframe + video grid → `site/` | — |
+| 6. Report | Quality dashboard → `report.html` | ~50 KB |
+| 7. ZIP | Archive `site/` → `clone-result.zip` | up to 1 GB |
+| 8. R2 Upload | Direct upload via `aws s3 cp` | — |
+| 9. Email | "Clone ready!" + download links | — |
 
 ---
 
@@ -141,14 +144,16 @@ Session is stored as an `HttpOnly` cookie (30 days). Click your avatar → **Sig
 1. Paste a Google Sites URL
 2. (Optional) Enter email for download link
 3. Click **Clone**
-4. Pipeline runs on GitHub Actions
-5. When ready: ZIP + report uploaded to Cloudflare R2
-6. Email sent with download links (if email provided)
+4. Immediate: site preview card + "⏳ Cloning started" email (with og:image)
+5. Pipeline runs on GitHub Actions (~5 min)
+6. ZIP + report uploaded **directly to Cloudflare R2** (up to 1 GB)
+7. "🎉 Clone ready!" email with download links
 
 ### Download Links
 
-- **ZIP** — download link valid for 1 hour (presigned), file stored for **7 days**
-- **Report** — viewable in browser, stored for **360 days**
+- **ZIP** — presigned URL (1h), file stored **7 days** in R2
+- **Report** — presigned URL, stored **360 days** in R2
+- **Preview image** — og:image proxied through R2 (7 days)
 
 ---
 
