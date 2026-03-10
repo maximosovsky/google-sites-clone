@@ -4,6 +4,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid URL' });
     }
 
+    let title = '';
+    let ogImage = '';
+
     try {
         const response = await fetch(url, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; gsclone/1.0)' },
@@ -12,13 +15,16 @@ export default async function handler(req, res) {
         const html = await response.text();
 
         const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        const ogMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
+        if (titleMatch) title = titleMatch[1].replace(/ - Google Sites$/, '').trim();
 
-        return res.status(200).json({
-            title: titleMatch ? titleMatch[1].replace(/ - Google Sites$/, '').trim() : '',
-            ogImage: ogMatch ? ogMatch[1] : '',
-        });
-    } catch {
-        return res.status(200).json({ title: '', ogImage: '' });
+        const ogMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
+        if (ogMatch) ogImage = ogMatch[1];
+    } catch { /* ignore fetch errors */ }
+
+    // Fallback: real screenshot via thum.io (free, no API key)
+    if (!ogImage) {
+        ogImage = `https://image.thum.io/get/width/600/${url}`;
     }
+
+    return res.status(200).json({ title, ogImage });
 }
