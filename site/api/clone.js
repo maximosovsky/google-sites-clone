@@ -34,10 +34,12 @@ export default async function handler(req, res) {
         }
     }
 
-    // Fetch site preview (title + og:image)
+    // Fetch site preview (title + og:image + page count estimate)
     let siteTitle = url;
     let ogImage = '';
     let ogImageR2 = '';
+    let estimatedPages = 0;
+    let estimatedZipMB = 0;
     try {
         const pageRes = await fetch(url, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; gsclone/1.0)' },
@@ -48,6 +50,12 @@ export default async function handler(req, res) {
         if (titleMatch) siteTitle = titleMatch[1].replace(/ - Google Sites$/, '').trim();
         const ogMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
         if (ogMatch) ogImage = ogMatch[1];
+
+        // Count nav links to estimate pages (~3 MB/page in ZIP)
+        const navLinks = html.match(/sites\.google\.com\/[^"'\s]+/gi) || [];
+        const uniquePages = new Set(navLinks.map(l => l.replace(/[#?].*/, '')));
+        estimatedPages = Math.max(uniquePages.size, 1);
+        estimatedZipMB = Math.round(estimatedPages * 3);
 
         // Download og:image and upload to R2 for email compatibility
         if (ogImage) {
@@ -106,6 +114,7 @@ export default async function handler(req, res) {
                                 <div style="background:#f8f9ff;border-radius:12px;padding:16px;margin:16px 0">
                                     <p style="font-weight:bold;margin:0 0 4px">${siteTitle}</p>
                                     <p style="font-size:13px;color:#666;margin:0;word-break:break-all">${url}</p>
+                                    ${estimatedPages ? `<p style="font-size:13px;color:#555;margin:8px 0 0">📊 ~${estimatedPages} pages · estimated ZIP ~${estimatedZipMB} MB</p>` : ''}
                                     ${previewImg ? `<img src="${previewImg}" style="width:100%;border-radius:8px;margin-top:12px" alt="preview"/>` : ''}
                                 </div>
                                 <p style="font-size:14px;color:#666">⏱ Usually takes 3–10 minutes. We'll email you when the ZIP and report are ready.</p>
@@ -125,6 +134,8 @@ export default async function handler(req, res) {
                 ok: true,
                 siteTitle,
                 ogImage: previewImg,
+                estimatedPages,
+                estimatedZipMB,
                 emailError: emailError || null,
                 message: `✅ Clone started!\n\n${siteTitle}`,
             });
