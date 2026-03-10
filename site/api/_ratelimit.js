@@ -1,4 +1,4 @@
-import { getCloneCount, getDailyCount, getMonthlyCount } from './_redis.js';
+import { getCloneCount, getDailyCount, getMonthlyCount, getStarredInfo, setStarredInfo } from './_redis.js';
 
 const MAX_ZIP_MB = 250;
 const FREE_CLONES = 1;
@@ -76,21 +76,46 @@ export async function checkRateLimit(sessions, estimatedZipMB) {
         return result;
     }
 
-    // Need GitHub auth for Starred tier
-    if (!sessions.github) {
-        result.allowed = false;
-        result.needsGithub = true;
-        result.reason = 'Sign in with GitHub to continue cloning';
-        return result;
-    }
+    // Check cached star status from Redis (no GitHub session needed)
+    const starredInfo = await getStarredInfo(email);
+    if (starredInfo) {
+        // Recheck every 7 days if GitHub session available
+        const daysSinceVerified = (Date.now() - new Date(starredInfo.verifiedAt).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSinceVerified < 7) {
+            // Cached star is fresh — skip GitHub check, go to daily/monthly limits
+        } else if (sessions.github) {
+            // Revalidate star
+            const stillStarred = await checkStarred(sessions.github.token);
+            if (stillStarred) {
+                await setStarredInfo(email, sessions.github.name || starredInfo.github);
+            } else {
+                result.allowed = false;
+                result.needsStar = true;
+                result.reason = 'Star the repo on GitHub to continue cloning';
+                return result;
+            }
+        }
+        // Cached star valid — check daily/monthly limits
+    } else {
+        // No cached star — need GitHub auth to verify
+        if (!sessions.github) {
+            result.allowed = false;
+            result.needsGithub = true;
+            result.reason = 'Sign in with GitHub to continue cloning';
+            return result;
+        }
 
-    // Need star for Starred tier
-    const starred = await checkStarred(sessions.github.token);
-    if (!starred) {
-        result.allowed = false;
-        result.needsStar = true;
-        result.reason = 'Star the repo on GitHub to unlock more clones';
-        return result;
+        // Check star via GitHub API
+        const starred = await checkStarred(sessions.github.token);
+        if (!starred) {
+            result.allowed = false;
+            result.needsStar = true;
+            result.reason = 'Star the repo on GitHub to unlock more clones';
+            return result;
+        }
+
+        // Cache the star verification
+        await setStarredInfo(email, sessions.github.name || '');
     }
 
     // Starred tier: check daily limit

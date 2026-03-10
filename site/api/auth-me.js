@@ -1,5 +1,5 @@
 import { getSessionFromReq } from './_session.js';
-import { getCloneCount, getDailyCount, getMonthlyCount } from './_redis.js';
+import { getCloneCount, getDailyCount, getMonthlyCount, getStarredInfo } from './_redis.js';
 import { checkStarred } from './_ratelimit.js';
 
 export default async function handler(req, res) {
@@ -26,10 +26,14 @@ export default async function handler(req, res) {
             getDailyCount(email),
             getMonthlyCount(email),
         ]);
-    }
 
-    if (sessions.github?.token) {
-        starred = await checkStarred(sessions.github.token);
+        // Check cached star first, then live GitHub API
+        const cachedStar = await getStarredInfo(email);
+        if (cachedStar) {
+            starred = true;
+        } else if (sessions.github?.token) {
+            starred = await checkStarred(sessions.github.token);
+        }
     }
 
     return res.status(200).json({

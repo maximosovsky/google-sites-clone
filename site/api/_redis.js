@@ -69,3 +69,30 @@ export async function incrementCloneCount(email) {
         ),
     ]);
 }
+
+/**
+ * Get cached starred info for a user
+ * @param {string} email
+ * @returns {object|null} { github, verifiedAt } or null
+ */
+export async function getStarredInfo(email) {
+    const redis = getRedis();
+    if (!redis) return null;
+    const data = await redis.get(`starred:${email}`);
+    if (!data) return null;
+    return typeof data === 'string' ? JSON.parse(data) : data;
+}
+
+/**
+ * Cache starred verification for a user (recheck every 7 days)
+ * @param {string} email
+ * @param {string} githubUsername
+ */
+export async function setStarredInfo(email, githubUsername) {
+    const redis = getRedis();
+    if (!redis) return;
+    await redis.set(`starred:${email}`, JSON.stringify({
+        github: githubUsername,
+        verifiedAt: new Date().toISOString(),
+    }));
+}
