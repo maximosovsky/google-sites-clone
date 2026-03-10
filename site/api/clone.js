@@ -24,14 +24,23 @@ export default async function handler(req, res) {
     let email = overrideEmail || '';
     let ghToken = '';
     let ghUser = '';
+    let authenticated = false;
     if (jwtSecret) {
         const sessions = getSessionFromReq(req, jwtSecret);
-        if (sessions.google && !email) email = sessions.google.email || '';
+        if (sessions.google) {
+            authenticated = true;
+            if (!email) email = sessions.google.email || '';
+        }
         if (sessions.github) {
+            authenticated = true;
             if (!email) email = sessions.github.email || '';
             ghToken = sessions.github.token || '';
             ghUser = sessions.github.name || '';
         }
+    }
+
+    if (!authenticated) {
+        return res.status(401).json({ error: 'Sign in with Google or GitHub to clone' });
     }
 
     // Fetch site preview (title + og:image + page count estimate)

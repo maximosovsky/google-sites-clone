@@ -349,6 +349,14 @@
         alert('Please enter a valid Google Sites URL');
         return;
       }
+
+      // Require auth — redirect to Google OAuth if not logged in
+      if (!_googleUser && !_ghUser) {
+        localStorage.setItem('gsclone_pending_url', url);
+        window.location.href = '/api/auth-google';
+        return;
+      }
+
       this.querySelector('.btn-text').hidden = true;
       this.querySelector('.btn-loading').hidden = false;
       this.disabled = true;
@@ -493,6 +501,13 @@
           if (!data) return;
           if (data.google) applyAuth(data.google);
           if (data.github) applyGhAuth(data.github);
+
+          // Restore pending URL after OAuth redirect
+          const pendingUrl = localStorage.getItem('gsclone_pending_url');
+          if (pendingUrl && (data.google || data.github)) {
+            localStorage.removeItem('gsclone_pending_url');
+            document.getElementById('urlInput').value = pendingUrl;
+          }
         })
         .catch(() => { });
     })();
