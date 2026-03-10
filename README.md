@@ -12,7 +12,7 @@
 
 **Clone any Google Sites page to static HTML — own your content forever**
 
-[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Tech Stack](#-tech-stack) · [Pipeline](pipeline.html) · [npm](https://www.npmjs.com/package/google-sites-clone) · [Roadmap](ROADMAP.md)
+[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Pipeline](#-pipeline) · [Tech Stack](#-tech-stack) · [npm](https://www.npmjs.com/package/google-sites-clone) · [Roadmap](ROADMAP.md)
 
 </div>
 
@@ -136,6 +136,53 @@ URL → [1. Crawl]      → page-map.json (~2 KB)
 | 5 | Build script | `site/` (nav + grid + report) | — |
 | 6 | ZIP | `clone-result.zip` | up to 250 MB |
 | 7 | AWS CLI | R2: `zips/` (7d auto-delete), `reports/` (360d auto-delete) | — |
+
+---
+
+## 🔧 Pipeline
+
+```mermaid
+graph TD
+    URL["🌐 Google Sites URL"] --> S1
+
+    subgraph "Step 1: Crawl"
+    S1["Puppeteer opens main page"] --> S1b["Parse sidebar links"]
+    S1b --> PM["📋 page-map.json"]
+    end
+
+    subgraph "Step 2: SingleFile"
+    PM --> S2["SingleFile CLI per page"]
+    S2 --> SF["📦 _pages/ — CSS + base64"]
+    end
+
+    subgraph "Step 3: Puppeteer"
+    PM --> S3["Puppeteer batch ×5"]
+    S3 --> PP["📄 _content/ — clean HTML"]
+    end
+
+    subgraph "Step 4: Assets"
+    SF --> S4["Decode base64 images"]
+    S4 --> IMG["🖼️ site/images/"]
+    PP --> S4v["Scan for video iframes"]
+    S4v --> THUMB["🎬 site/thumbnails/"]
+    end
+
+    subgraph "Step 5: Build"
+    PM --> NAV["Sidebar navigation"]
+    SF --> COPY["Copy SF pages"]
+    IMG --> REWRITE["Rewrite image URLs"]
+    THUMB --> REPLACE["Video thumbnail grid"]
+    NAV --> INDEX["index.html"]
+    COPY --> SITE["📁 site/"]
+    REWRITE --> SITE
+    REPLACE --> SITE
+    INDEX --> SITE
+    end
+
+    SITE --> ZIP["📦 ZIP archive"]
+    ZIP --> R2["☁️ Cloudflare R2"]
+    R2 --> EMAIL["📧 Clone ready!"]
+```
 
 ---
 
