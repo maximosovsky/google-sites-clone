@@ -7,6 +7,7 @@
 - [README](https://github.com/maximosovsky/google-sites-clone/blob/main/README.md): Quick start, features, tech stack
 - [ROADMAP](https://github.com/maximosovsky/google-sites-clone/blob/main/ROADMAP.md): Development phases and decisions
 - [ARCHITECTURE](https://github.com/maximosovsky/google-sites-clone/blob/main/ARCHITECTURE.md): Mermaid diagrams and system design
+- [MANUAL](https://github.com/maximosovsky/google-sites-clone/blob/main/MANUAL.md): User manual for CLI and web UI
 
 ## Usage
 
@@ -14,10 +15,28 @@
 npx google-sites-clone https://sites.google.com/view/your-site
 ```
 
+Web UI: [gsclone.osovsky.com](https://gsclone.osovsky.com) — sign in with Google, paste URL, get ZIP by email.
+
 ## Pipeline
 
 1. Crawl: Auto-discover pages from navigation
 2. SingleFile: Capture CSS + base64 images
-3. Puppeteer: Extract clean content (batch x5)
+3. Puppeteer: Extract clean content (batch ×5)
 4. Images: Decode base64 → local files
-5. Build: Merge + YouTube thumbnails + sitemap.xml
+5. Video: YouTube/Vimeo thumbnails
+6. Build: Merge + video grid + sitemap.xml + report.html
+7. ZIP: Archive site/ (up to 250 MB)
+8. R2 Upload: Direct upload to Cloudflare R2
+9. Email: "Clone ready!" + download links via Resend
+
+## Usage Tiers
+
+| Tier | Auth | Clones | Max ZIP |
+|------|------|--------|---------|
+| Free | Google OAuth | 1 total | 250 MB |
+| Starred | Google + GitHub + ⭐ repo | 5/day, 20/month | 250 MB |
+| Unlimited | By request | ∞ | ∞ |
+
+## Tech Stack
+
+Node.js 18+, Puppeteer, SingleFile CLI, Vercel (API), GitHub Actions (pipeline), Cloudflare R2 (storage), Upstash Redis (rate limits), Resend (email), Google/GitHub OAuth.

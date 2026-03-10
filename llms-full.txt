@@ -7,12 +7,15 @@
 - [README](https://github.com/maximosovsky/google-sites-clone/blob/main/README.md): Quick start, features, tech stack
 - [ROADMAP](https://github.com/maximosovsky/google-sites-clone/blob/main/ROADMAP.md): Development phases and decisions
 - [ARCHITECTURE](https://github.com/maximosovsky/google-sites-clone/blob/main/ARCHITECTURE.md): Mermaid diagrams and system design
+- [MANUAL](https://github.com/maximosovsky/google-sites-clone/blob/main/MANUAL.md): User manual for CLI and web UI
 
 ## Usage
 
 ```bash
 npx google-sites-clone https://sites.google.com/view/your-site
 ```
+
+Web UI: [gsclone.osovsky.com](https://gsclone.osovsky.com) — sign in with Google, paste URL, get ZIP by email.
 
 ## CLI Options
 
@@ -25,19 +28,65 @@ gsclone <url> [options]
   --serve              Start local server after build
   --custom-nav         Use custom sidebar navigation
   --inline             Keep images inline (base64)
+  --zip                Create ZIP archive after build
 ```
 
 ## Pipeline
 
 1. **Crawl** (`lib/crawl.js`): Opens the Google Sites URL with Puppeteer, parses sidebar navigation links (`li[role="treeitem"] a, nav a`), discovers all pages, generates `page-map.json` with titles, URLs, depth, and slugified filenames. Supports Cyrillic transliteration.
 
-2. **SingleFile** (`lib/singlefile.js`): Runs `single-file` CLI on each page URL. Captures full CSS, base64-encoded images, and layout. Skips already-downloaded pages. 3-second pause between pages to avoid rate limiting.
+2. **SingleFile** (`lib/singlefile.js`): Runs `single-file` CLI on each page URL. Captures full CSS, base64-encoded images, and layout. Skips already-downloaded pages. Auto-installs SingleFile CLI on first run (~30 MB). 3-second pause between pages.
 
-3. **Puppeteer batch** (`lib/puppeteer.js`): Extracts content in batches of 5 pages. For each page: navigates, waits for `section.yaqOZd` selector, scrolls to trigger lazy loading (40 iterations), extracts all `<section>` elements. Replaces `<iframe>` with `data-iframe-src` placeholder divs. 60-second pause between batches.
+3. **Puppeteer batch** (`lib/puppeteer.js`): Extracts content in batches of 5 pages. For each page: navigates, waits for `section.yaqOZd` selector, scrolls to trigger lazy loading (40 iterations), extracts all `<section>` elements. Replaces `<iframe>` with `data-iframe-src` placeholder divs. SPA fallback for pages that fail direct URL loading. 60-second pause between batches.
 
 4. **Image localization** (`lib/images.js`): Matches Google CDN URLs from Puppeteer content with base64 images from SingleFile by position. Decodes base64 to local files (`images/img0001.jpg`). Replaces CDN URLs in content HTML. Skips images smaller than 200 bytes.
 
-5. **Build** (`lib/build.js`): For each page, extracts `<style>` blocks from SingleFile HTML and content from Puppeteer HTML. Converts YouTube iframe placeholders to clickable thumbnails (`img.youtube.com/vi/{id}/maxresdefault.jpg`). Wraps in HTML5 document with footer badge. Generates `sitemap.xml` and `robots.txt`.
+5. **Video** (`lib/video.js`): Scans `_content/` HTML for YouTube, Vimeo, Google Drive iframes. Downloads thumbnails (YouTube: maxresdefault.jpg 1280×720, fallback hqdefault.jpg 480×360; Vimeo: vumbnail.com). Saves to `site/thumbnails/`.
+
+6. **Build** (`lib/build.js`): Generates `index.html` with sidebar navigation + iframe. Copies SingleFile pages. Injects CSS Grid of video thumbnails into SF pages (inline styles, `all:initial` isolation). Generates `sitemap.xml`, `robots.txt`. Links `report.html` from footer.
+
+7. **Report** (`lib/report.js`): Generates `report.html` — per-page comparison dashboard showing SingleFile vs Puppeteer status, video embed counts, thumbnail download status.
+
+## SaaS API (Vercel Serverless)
+
+```
+site/api/
+├── _session.js             ← HMAC session helper
+├── _r2.js                  ← Cloudflare R2 upload/download (S3 SDK)
+├── _email.js               ← Resend email helper
+├── _redis.js               ← Upstash Redis client (rate limiting)
+├── _ratelimit.js           ← Rate limit + GitHub star check logic
+├── auth-google.js          ← Redirect → Google OAuth consent
+├── auth-google-callback.js ← Exchange code → set session cookie
+├── auth-github.js          ← Redirect → GitHub OAuth
+├── auth-github-callback.js ← Exchange code → set session cookie
+├── auth-me.js              ← GET current user + clone counts + starred
+├── auth-logout.js          ← Clear session cookie
+├── clone.js                ← POST → rate limit check → trigger Actions → email
+├── upload.js               ← POST webhook → send "ready" email
+└── download.js             ← GET → presigned R2 download URL
+```
+
+## Usage Tiers
+
+| Tier | Auth | Clones | Max ZIP |
+|------|------|--------|---------|
+| Free | Google OAuth | 1 total | 250 MB |
+| Starred | Google + GitHub + ⭐ repo | 5/day, 20/month | 250 MB (~5 GB/month) |
+| Unlimited | Email offer only ($99/month) | ∞ | ∞ |
+
+- Clone count tracked in Upstash Redis (key: `clones:{email}`)
+- Star check: GitHub API `GET /user/starred/maximosovsky/google-sites-clone`
+- Star status cached in Redis (`starred:{email}`) with 7-day recheck
+- Unlimited tier offered via email when Starred user exhausts monthly limit
+
+## R2 Lifecycle Rules (auto-cleanup)
+
+| Prefix | Auto-delete after |
+|--------|------------------|
+| `zips/` | 7 days |
+| `previews/` | 7 days |
+| `reports/` | 360 days |
 
 ## File Structure
 
@@ -45,18 +94,27 @@ gsclone <url> [options]
 google-sites-clone/
 ├── bin/gsclone.js          # CLI entry point (Commander.js)
 ├── lib/
-│   ├── index.js            # Pipeline orchestrator (5 steps)
+│   ├── index.js            # Pipeline orchestrator
 │   ├── crawl.js            # Step 1: Auto-crawl navigation
 │   ├── singlefile.js       # Step 2: SingleFile pass
 │   ├── puppeteer.js        # Step 3: Puppeteer batch extraction
 │   ├── images.js           # Step 4: Base64 → local images
-│   └── build.js            # Step 5: Merge + sitemap
+│   ├── video.js            # Step 5: YouTube/Vimeo thumbnails
+│   ├── build.js            # Step 6: Merge + video grid + nav
+│   ├── report.js           # Clone report dashboard
+│   ├── deploy.js           # GitHub Pages deploy
+│   └── zip.js              # ZIP archive creation
+├── rebuild.js              # Quick rebuild from cache
 ├── site/
 │   ├── index.html          # Landing page (gsclone.osovsky.com)
-│   └── style.css           # Landing page design system
-├── ARCHITECTURE.md         # Mermaid diagrams
-├── ROADMAP.md              # Development phases
-├── llms.txt                # LLM summary (this file's shorter version)
+│   ├── style.css           # Design system
+│   ├── vercel.json         # API rewrites
+│   └── api/                # Vercel serverless functions
+├── pipeline.html           # Visual pipeline architecture
+├── ARCHITECTURE.md
+├── MANUAL.md
+├── ROADMAP.md
+├── llms.txt                # LLM summary
 ├── llms-full.txt           # LLM full reference (this file)
 └── package.json
 ```
@@ -65,7 +123,9 @@ google-sites-clone/
 
 - `puppeteer` ^22.0.0 — headless Chrome for crawling and content extraction
 - `commander` ^12.0.0 — CLI argument parsing
-- `single-file-cli` (global) — full-page capture with CSS and base64 images
+- `single-file-cli` (auto-installed) — full-page capture with CSS and base64 images
+- `@aws-sdk/client-s3` — Cloudflare R2 uploads
+- `@upstash/redis` — rate limit counters
 
 ## Key Technical Details
 
@@ -75,4 +135,22 @@ google-sites-clone/
 - SingleFile captures CSS that Puppeteer cannot (inline styles, computed styles, fonts)
 - Image matching is positional (CDN URL #1 maps to base64 image #1)
 - Slugification supports Cyrillic → Latin transliteration for filenames
-- Output HTML uses `lang="ru"` (hardcoded, site was originally Russian)
+- iframe-based navigation: index.html = sidebar + iframe, pages load inside iframe
+- Video grid uses `all:initial` CSS reset to isolate from SingleFile styles
+- Auth: HMAC-signed cookies (HttpOnly, Secure, SameSite=Lax, 30 days)
+- GitHub Actions runs full pipeline (avoids Vercel serverless timeout limits)
+- R2 uploads via `aws s3 cp` (supports files up to 1 GB, limited to 250 MB for Free/Starred)
+
+## Environment Variables
+
+| Variable | Service |
+|----------|---------|
+| GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET | Google Cloud Console |
+| GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET | GitHub Developer Settings |
+| JWT_SECRET | Random 32+ char string |
+| R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY | Cloudflare R2 |
+| R2_BUCKET | Bucket name (e.g. gsclone) |
+| UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN | Upstash Redis |
+| RESEND_API_KEY, RESEND_FROM | Resend |
+| WEBHOOK_SECRET | Shared secret for Actions → upload |
+| GITHUB_TOKEN | GitHub PAT for workflow dispatch |
