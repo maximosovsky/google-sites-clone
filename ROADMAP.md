@@ -82,7 +82,11 @@
 - [ ] Fix email input field visibility on landing page
 - [ ] Verify `osovsky.com` domain in Resend (DNS propagation pending)
 - [ ] Update `RESEND_FROM` to `clone@osovsky.com`
-- [ ] GitHub Pages auto-deploy from web UI (using stored OAuth token)
+- [ ] GitHub Pages deploy from email (after clone ready)
+  - [ ] Expand GitHub OAuth scope to `public_repo`
+  - [ ] Create `/api/deploy?id=xxx` endpoint (download ZIP from R2 → push to gh-pages)
+  - [ ] Add "Deploy to GitHub Pages" button in clone-ready email
+  - [ ] Handle Vercel timeout (offload to GitHub Actions workflow)
 - [ ] Custom domain `gsclone.osovsky.com` → Vercel
 - [x] R2 lifecycle rules (zips 7d, previews 7d, reports 360d)
 - [ ] Rate limit per user (Upstash Redis: Free 1 clone, Starred 5/day + 20/month)
