@@ -329,24 +329,21 @@
         this.querySelector('.btn-loading').hidden = false;
         this.disabled = true;
         try {
-          const previewRes = await fetch(url);
-          const html = await previewRes.text();
-          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-          const ogMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
+          const previewRes = await fetch('/api/preview?url=' + encodeURIComponent(url));
+          const preview = await previewRes.json();
           const card = document.getElementById('cloneStatus');
           card.style.display = 'block';
           card.style.background = '#f0f4ff';
           card.style.borderColor = '#6078ff';
           document.getElementById('statusIcon').textContent = '🌐';
-          document.getElementById('statusTitle').textContent = titleMatch ? titleMatch[1].trim() : 'Google Sites page';
+          document.getElementById('statusTitle').textContent = preview.title || 'Google Sites page';
           document.getElementById('statusSite').textContent = url;
           document.getElementById('statusMsg').innerHTML = '🔐 Sign in with Google to start cloning<br><a href="/api/auth-google" style="display:inline-block;padding:8px 20px;background:#4285f4;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin-top:8px" onclick="localStorage.setItem(\'gsclone_pending_url\',\'' + url.replace(/'/g, "\\'") + '\')">Sign in with Google</a>';
           const img = document.getElementById('statusPreview');
-          if (ogMatch) { img.src = ogMatch[1]; img.style.display = 'block'; }
+          if (preview.ogImage) { img.src = preview.ogImage; img.style.display = 'block'; }
           else { img.style.display = 'none'; }
           _previewShown = true;
         } catch {
-          // CORS will likely block direct fetch — show simple preview
           const card = document.getElementById('cloneStatus');
           card.style.display = 'block';
           card.style.background = '#f0f4ff';
