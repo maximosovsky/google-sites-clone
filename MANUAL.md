@@ -1,6 +1,7 @@
 # 📖 google-sites-clone — User Manual
 
 [![npm](https://img.shields.io/npm/v/google-sites-clone?logo=npm)](https://www.npmjs.com/package/google-sites-clone)
+
 ---
 
 ## Prerequisites
@@ -44,13 +45,15 @@ Options:
 gsclone deploy ./clone/site --repo username/my-clone
 ```
 
-Pushes `site/` to the `gh-pages` branch. Enable GitHub Pages in repo Settings → Pages → Branch: `gh-pages`.
+Pushes `site/` to the `gh-pages` branch.
+Enable GitHub Pages in repo
+Settings → Pages → Branch: `gh-pages`.
 
 ---
 
 ## Output Structure
 
-```
+```text
 ./clone/
 ├── page-map.json              ← discovered pages + hierarchy
 ├── _pages/                    ← SingleFile snapshots (CSS + base64 images)
@@ -98,7 +101,10 @@ This skips crawl/SingleFile/Puppeteer and re-runs video scan + build + report.
 
 ## Video Grid
 
-Pages with embedded YouTube/Vimeo/Google Drive content get a thumbnail grid injected at the top. The grid uses inline CSS (`all:initial`) to avoid conflicts with the original page styles.
+Pages with embedded YouTube/Vimeo/Google Drive
+content get a thumbnail grid injected at the top.
+The grid uses inline CSS (`all:initial`) to avoid
+conflicts with the original page styles.
 
 - **YouTube/Vimeo** — clickable thumbnail with play button (or text fallback)
 - **Google Drive** — text link to file
@@ -118,7 +124,9 @@ Pages with embedded YouTube/Vimeo/Google Drive content get a thumbnail grid inje
 | Thumbs | Downloaded thumbnails count |
 | Total site MB | Full site directory size |
 
-Video chips are clickable (link to original) and color-coded:
+Video chips are clickable (link to original)
+and color-coded:
+
 - 🟢 Green — thumbnail downloaded
 - 🔴 Red — thumbnail missing
 
@@ -130,14 +138,18 @@ The landing page provides a browser-based interface for cloning:
 
 ### Authentication
 
-Click the Google or GitHub icon in the header to sign in. Your email is pre-filled in the clone form after login.
+Click the Google or GitHub icon in the header
+to sign in. Your email is pre-filled in the
+clone form after login.
 
 | Provider | What you get |
 |----------|--------------|
 | Google | Name, email, avatar from Google account |
 | GitHub | Username, email, avatar from GitHub profile |
 
-Session is stored as an `HttpOnly` cookie (30 days). Click your avatar → **Sign Out** to log out.
+Session is stored as an `HttpOnly` cookie
+(30 days). Click your avatar → **Sign Out**
+to log out.
 
 ### Cloning via Web UI
 

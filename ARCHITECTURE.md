@@ -1,6 +1,7 @@
 # 🏗️ google-sites-clone — Architecture
 
 [![npm](https://img.shields.io/npm/v/google-sites-clone?logo=npm)](https://www.npmjs.com/package/google-sites-clone)
+
 ---
 
 ## ⚙️ CLI Pipeline
@@ -34,16 +35,16 @@ flowchart LR
 | `crawl.js` | URL | `page-map.json` (pages + hierarchy) |
 | `singlefile.js` | page-map | `_pages/*.html` (CSS + base64 images) |
 | `puppeteer.js` | page-map | `_content/*.html` (clean text + iframes) |
-| `images.js` | _pages/ + _content/ | `site/images/*` (decoded files) |
+| `images.js` | `_pages/` + `_content/` | `site/images/*` (decoded files) |
 | `video.js` | _content/ | `site/thumbnails/*` (YT/Vimeo thumbs) |
 | `build.js` | all above | `site/` (index.html + iframe nav + pages + video grid) |
-| `report.js` | page-map + _pages/ + _content/ | `report.html` (comparison dashboard) |
+| `report.js` | page-map + `_pages/` + `_content/` | `report.html` (comparison dashboard) |
 
 ---
 
 ## 🔐 SaaS API (Vercel Serverless)
 
-```
+```text
 site/api/
 ├── _session.js            ← HMAC session helper (Node.js crypto)
 ├── _r2.js                 ← Cloudflare R2 upload/download (S3 SDK)
@@ -79,17 +80,21 @@ site/api/
 |------|------|--------|---------|
 | **Free** | Google OAuth | 1 total | 250 MB |
 | **Starred** | Google + GitHub + ⭐ repo | 5/day, 20/month | 250 MB (~5 GB/month) |
-| **Unlimited** | Email offer only | ∞ | ∞ | $99/month |
+| **Unlimited** | Email offer only | ∞ | ∞ |
 
-- Clone count tracked in **Upstash Redis** (key: `clones:{google_email}`)
-- Star check: `GET /user/starred/maximosovsky/google-sites-clone` (GitHub API)
-- Unlimited tier is never shown on site — offered via email when Starred user exhausts monthly limit
+- Clone count tracked in **Upstash Redis**
+  (key: `clones:{google_email}`)
+- Star check:
+  `GET /user/starred/maximosovsky/google-sites-clone`
+  (GitHub API)
+- Unlimited tier: offered via email when
+  Starred user exhausts monthly limit
 
 ---
 
 ## 📂 Output Structure
 
-```
+```text
 clone-output/
 ├── page-map.json              ← Step 1: Crawl
 ├── _pages/                    ← Step 2: SingleFile
@@ -137,7 +142,13 @@ flowchart TB
 
 ### Root Page Filtering
 
-The crawler marks the root page as `file: "index.html"` in page-map.json. Since `build.js` generates its own `index.html` (navigation shell), entries with `file === 'index.html'` are excluded from the content build loop and sidebar navigation.
+The crawler marks the root page as
+`file: "index.html"` in page-map.json.
+Since `build.js` generates its own
+`index.html` (navigation shell), entries
+with `file === 'index.html'` are excluded
+from the content build loop and sidebar
+navigation.
 
 ---
 
@@ -162,7 +173,10 @@ Thumbnails replace `<iframe>` placeholders with clickable images + play button o
 
 ### Video Grid (build.js → SF pages)
 
-SingleFile pages don't contain `data-iframe-src` placeholders (SingleFile strips iframes). To restore videos:
+SingleFile pages don't contain
+`data-iframe-src` placeholders
+(SingleFile strips iframes).
+To restore videos:
 
 1. `buildVideoGrid()` reads the matching `_content/` file for each SF page
 2. Extracts YouTube/Vimeo IDs using the same regex patterns as `video.js`
@@ -171,9 +185,13 @@ SingleFile pages don't contain `data-iframe-src` placeholders (SingleFile strips
 5. Injects the grid right after `<body>` in the SF HTML
 
 Key design decisions:
-- **`all:initial`** on the container — resets all inherited SF styles, isolates the grid
-- **Inline styles only** — no `<style>` block needed, no CSS conflicts with SF
-- **`auto-fill, minmax(200px, 1fr)`** — responsive 1–4 columns depending on width
+
+- **`all:initial`** on the container —
+  resets all inherited SF styles
+- **Inline styles only** — no `<style>`
+  block needed, no CSS conflicts with SF
+- **`auto-fill, minmax(200px, 1fr)`** —
+  responsive 1–4 columns
 
 ---
 
@@ -272,8 +290,12 @@ flowchart TB
 
 ### Storage + Email Flow
 
-1. `/api/clone` checks rate limit (Redis) → fetches og:image → uploads preview to R2 → sends "⏳ Cloning started" email
-2. GitHub Actions runs pipeline → uploads ZIP + report **directly to R2** via `aws s3 cp` (max 250 MB for Free/Starred)
+1. `/api/clone` checks rate limit (Redis)
+   → fetches og:image → uploads preview
+   to R2 → sends "⏳ Cloning started" email
+2. GitHub Actions runs pipeline → uploads
+   ZIP + report **directly to R2** via
+   `aws s3 cp` (max 250 MB)
 3. Actions sends lightweight webhook `{id, email, siteUrl}` to `/api/upload`
 4. Upload handler sends "🎉 Clone ready" email with presigned download links
 5. `/api/download?id=xxx&type=zip` redirects to presigned R2 URL

@@ -10,19 +10,30 @@
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
-**Clone any Google Sites page to static HTML — own your content forever**
+## Clone any Google Sites page to static HTML
 
-[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Pipeline](#-pipeline) · [Tech Stack](#-tech-stack) · [npm](https://www.npmjs.com/package/google-sites-clone) · [Roadmap](ROADMAP.md)
+[Quick Start](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works) · [Pipeline](#-pipeline)
+[Tech Stack](#%EF%B8%8F-tech-stack) · [npm](https://www.npmjs.com/package/google-sites-clone) · [Roadmap](ROADMAP.md)
 
 </div>
 
-> *No more vendor lock-in. Your Google Sites content belongs to you. Paste a URL, get a complete static clone with all images, styles, and navigation — ready for self-hosting.*
+> *No more vendor lock-in. Your Google Sites content
+> belongs to you. Paste a URL, get a complete static
+> clone with all images, styles, and navigation —
+> ready for self-hosting.*
 
 ---
 
 ## 💡 Concept
 
-Google Sites stores your content behind an SPA that search engines can't index and you can't export. **google-sites-clone** uses a two-pass pipeline (SingleFile + Puppeteer) to capture everything — CSS fidelity from SingleFile and clean semantic content from Puppeteer — then merges both into standalone HTML files with localized images and SEO metadata.
+Google Sites stores your content behind an SPA
+that search engines can't index and you can't
+export. **google-sites-clone** uses a two-pass
+pipeline (SingleFile + Puppeteer) to capture
+everything — CSS fidelity from SingleFile and
+clean semantic content from Puppeteer — then
+merges both into standalone HTML files with
+localized images and SEO metadata.
 
 ---
 
@@ -47,7 +58,9 @@ Google Sites stores your content behind an SPA that search engines can't index a
 
 ### 🌐 Web (no install)
 
-Clone any Google Site at [**gsclone.osovsky.com**](https://gsclone.osovsky.com) — sign in with Google, paste URL, get ZIP by email.
+Clone any Google Site at
+[**gsclone.osovsky.com**](https://gsclone.osovsky.com) —
+sign in with Google, paste URL, get ZIP by email.
 
 ### 💻 CLI (developers)
 
@@ -57,7 +70,8 @@ Clone any Google Site at [**gsclone.osovsky.com**](https://gsclone.osovsky.com) 
 npx google-sites-clone https://sites.google.com/view/your-site
 ```
 
-📦 [View on npm](https://www.npmjs.com/package/google-sites-clone) · Installs: Puppeteer (~400 MB) + SingleFile CLI (~30 MB)
+📦 [View on npm](https://www.npmjs.com/package/google-sites-clone)
+· Installs: Puppeteer (~400 MB) + SingleFile CLI (~30 MB)
 
 <details>
 <summary>📋 Manual setup</summary>
@@ -116,7 +130,7 @@ Pushes `site/` to the `gh-pages` branch. Enable Pages in repo Settings → Pages
 
 ## 💡 How It Works
 
-```
+```text
 URL → [1. Crawl]      → page-map.json (~2 KB)
     → [2. SingleFile]  → _pages/ CSS + base64 (~7 MB/page)
     → [3. Puppeteer]   → _content/ clean content (~9 KB/page)
@@ -201,7 +215,7 @@ graph TD
 | Email | Resend |
 | Hosting | Vercel (landing + API) |
 
-```
+```text
 google-sites-clone/
 ├── bin/
 │   └── gsclone.js          # CLI entry point
@@ -278,7 +292,10 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 | [generate-static-site](https://github.com/lichtquelle/generate-static-site) | Headless SSR pre-render | ⚠️ Generic tool, no auto-crawl or Google Sites awareness |
 | **google-sites-clone** | Puppeteer + SingleFile | ✅ Full SPA rendering, auto-crawl, CSS fidelity, image localization |
 
-> New Google Sites (2020+) is a single-page application — all content is rendered by JavaScript. Traditional crawlers see an empty page. That's why this project uses a headless browser.
+> New Google Sites (2020+) is a single-page application —
+> all content is rendered by JavaScript.
+> Traditional crawlers see an empty page.
+> That's why this project uses a headless browser.
 
 ---
 

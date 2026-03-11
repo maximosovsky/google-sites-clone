@@ -92,5 +92,6 @@
 - [ ] Rate limit per user (Upstash Redis: Free 1 clone, Starred 5/day + 20/month)
 - [ ] GitHub star gate (require ⭐ for Starred tier)
 - [ ] 250 MB ZIP size limit
-- [ ] Post-crawl email with accurate page count (webhook from Actions after crawl step)
+- [ ] Post-crawl email with accurate page count
+  (webhook from Actions after crawl step)
 - [ ] Unlimited tier email offer ($99/mo)
